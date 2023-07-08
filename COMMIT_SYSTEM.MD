@@ -13,9 +13,8 @@ Commit will be linked to previous commit using commitID and branchID.
 
 
 # Initialize
-When we initialize we will create a ".kuflex" folder.
-It will contain the ".kurepo" file that will represent the repository.
-It will add add files in the directory and sub directory into the files list
-Unless it is defined in the ".kuFlexIgnore" file.
-# Commit
- WIP
+1. Create a folder called .kuflex
+2. create a file inside it .kuflexrepo with basic info.
+3. Do a first automated commit and create a default branch called "Default". Figuring diff for both file and directory is going to be its own monster.
+4. Devs will be responsible for ignoring files by creating their own .KuFlexignore file in project root
+
