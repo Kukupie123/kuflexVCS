@@ -10,4 +10,5 @@ public interface IDirService {
      * @return List of directories to each file in the dir and sub-dirs
      */
     List<String> getFiles(String dir);
+    boolean createRepoDir(String dir);
 }

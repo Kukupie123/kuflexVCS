@@ -42,4 +42,9 @@ public class DirService implements IDirService {
         }
         return filePaths;
     }
+
+    @Override
+    public boolean createRepoDir(String dir) {
+        return false;
+    }
 }
