@@ -5,7 +5,7 @@ import java.nio.file.NotDirectoryException;
 import java.util.Date;
 
 public interface IRepoService {
-    boolean initializeRepo(String directory, String projectName, Date creationDate, String creator) throws Exception;
+    boolean initializeRepo(String directory, String projectName, Date creationDate, String creator, String intialBranch) throws Exception;
 
     boolean doesRepoAlreadyExist(String directory);
 }

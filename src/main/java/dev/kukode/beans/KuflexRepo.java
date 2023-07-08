@@ -13,10 +13,10 @@ public class KuflexRepo {
         this.creationDate = creationDate;
     }
 
-    String projectName;
-    String creatorName;
-    Date creationDate;
-    List<String> files; //Files that are part of the repository
-    String activeBranch; //The currently active branch
-    String activeCommit; //The currently active commit we are working with
+    public String projectName;
+    public String creatorName;
+    public Date creationDate;
+    public List<String> files; //Files that are part of the repository
+    public String activeBranch; //The currently active branch
+    public String activeCommit; //The currently active commit we are working with
 }

@@ -1,10 +1,13 @@
 package dev.kukode.services.dir;
 
+import com.google.gson.Gson;
+import dev.kukode.beans.KuflexRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,7 +47,29 @@ public class DirService implements IDirService {
     }
 
     @Override
-    public boolean createRepoDir(String dir) {
-        return false;
+    public boolean createRepoDir(String dir, KuflexRepo kuflexRepo) throws Exception {
+        logger.info("Create Repo dir for path : " + dir + " and projectName " + kuflexRepo.projectName);
+        //Create the necessary directories
+        File rootDir = new File(dir);
+        if (!rootDir.isDirectory()) {
+            throw new Exception("Not a directory");
+        }
+        File kuFlexDir = new File(rootDir, ".kuflex");
+        if (!kuFlexDir.mkdir()) {
+            throw new Exception("Failed to create .kuFlex repository folder");
+        }
+        Gson gson = new Gson();
+        //create the kuflex repository file
+        String kuFlexRepoJSON = gson.toJson(kuflexRepo);
+
+        //Save kuFlexRepo to ".kuflex" folder
+        File kuFlexRepoFile = new File(kuFlexDir, "kuFlexRepo.json");
+        try (FileWriter fileWriter = new FileWriter(kuFlexRepoFile)) {
+            fileWriter.write(kuFlexRepoJSON);
+        } catch (Exception e) {
+            throw new Exception(e);
+        }
+
+        return true;
     }
 }

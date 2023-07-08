@@ -17,3 +17,5 @@ When we initialize we will create a ".kuflex" folder.
 It will contain the ".kurepo" file that will represent the repository.
 It will add add files in the directory and sub directory into the files list
 Unless it is defined in the ".kuFlexIgnore" file.
+# Commit
+ WIP

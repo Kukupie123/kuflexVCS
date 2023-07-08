@@ -2,11 +2,11 @@ package dev.kukode.services.repo;
 
 import dev.kukode.beans.KuflexRepo;
 import dev.kukode.services.dir.DirService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.nio.file.DirectoryNotEmptyException;
-import java.nio.file.NotDirectoryException;
 import java.util.Date;
 
 @Service
@@ -17,10 +17,11 @@ public class RepoService implements IRepoService {
     }
 
     final DirService dirService;
+    Logger logger = LoggerFactory.getLogger(this.getClass());
 
 
     @Override
-    public boolean initializeRepo(String directory, String projectName, Date creationDate, String creator) throws Exception {
+    public boolean initializeRepo(String directory, String projectName, Date creationDate, String creator, String initialBranch) throws Exception {
         /*
         1. Validate if there is already a valid repo setup
         2. If not we can continue
@@ -35,23 +36,23 @@ public class RepoService implements IRepoService {
             throw new DirectoryNotEmptyException("KuFlex Repository already exists");
         }
 
-        //Create a KuFlex folder
-        File file = new File(directory);
-        if (!file.isDirectory()) throw new NotDirectoryException("Not a directory");
-        file = new File(directory + "/.kuflex");
-        if (!file.mkdir())
-            throw new Exception("Failed to create .kuflex directory");
-
         //Create kuflexrepo
-        KuflexRepo repo = new KuflexRepo(projectName, creator, creationDate);
+        logger.info("Creating Repository folder with projectName : " + projectName);
+        KuflexRepo kuflexRepo = new KuflexRepo(projectName, creator, creationDate);
+
+        //Create repo directories
+        if (!dirService.createRepoDir(directory, kuflexRepo)) {
+            throw new Exception("Failed to create KuFlex repo directory");
+        }
+
 
         //Initial Commit with all files excluding the ones in .KuFlexIgnore
-        //TODO: Figure out how committing will work
         return false;
     }
 
     @Override
     public boolean doesRepoAlreadyExist(String directory) {
-        return true;
+        //TODO: Complete this
+        return false;
     }
 }
