@@ -38,4 +38,4 @@ Same concept as above. Extras will always be stored in vaults in a structured or
 #### Okay.. Won't there be useless junk data that are not used in any branch or commits?
 No, there can't be. I will scan the vault to get rid of files that are not used in any branch or commits.
 
-#### TODO: Define good structured diagram and concept showing how your VCS is going to be designed architecture wise 
+ #### TODO: Define good structured diagram and concept showing how your VCS is going to be designed architecture wise 
