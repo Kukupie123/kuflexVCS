@@ -56,3 +56,4 @@ InheritedFrom;
 }
 ```
 ## Architecture and workings
+## Instruction flow examples
