@@ -55,5 +55,37 @@ InheritedFrom;
 //The inheritedFrom has to be the from the same branch.
 }
 ```
-## Architecture and workings
+## Architecture
+.kuflex is the folder where all the files and folders are going to be found which will make the application function properly.
+It is not recommended to mess with these files and folders directly. <br> <br>
+
+Every Branch is going to be its own folder under "branches". <br>
+A Branch will have several subdirectories that are going to represent the commits done on that branch.
+We keep a database record of Commits under a branch directory to keep track of commits. These record needs to be in linked list structure so that it's easy to switch commits.
+<br> <br>
+
+A commit directory will have a snapshot of the project structure at that time as well as a file that is going to store the File Content Diff for all the files.
+We will be using the snapshots between two commits to determine which file has been removed and which file has been added. <br> <br>
+
+We also have a vault system where we are going to store files that are not relevant to the currently active commit, and once we switch to the commit where the file is relevant. <br> <br> <br>
+
+We keep a database record of branches in tree based structure. <br>
+We need tree based structure because a branch can be formed from another branch and another commit. <br> <br>
+
+### .kuflex-> kuflexrepo.json
+This is the repository that is going to have data related to the project such as project name, creation date etc.
+### Branches DB
+Every branch we create will be recorded into this database. A branch can be created from an existing branch and a commit within that branch.
+### .kuflex->branches
+Every branch is going to be its own folder whose names are going to be their UIDs.
+If a project has 3 branches then we will be able to find 3 directories inside "branches" directory representing the 3 branches
+### .kuflex->branches->ExampleBranch
+
 ## Instruction flow examples
+### Simple Tasks
+#### Initialising Repository
+* Create the necessary directories and files(.kuflex, kuflexrepo.json) <br>
+Default Branch and Commit will be created later.
+* Create a special branch. The reason I call it special is because it defies the normal rule of creating a branch. <br>
+A branch needs to be created from another branch and another commit but this one doesn't need them.
+#### Creating Initial Special Branch
