@@ -19,5 +19,40 @@ Features that I will implement late into development :- <br>
 2. Handling conflicts
 
 # Structure
-I will start off by showing the Folder Structure <br>
+## Folder Structure
 ![dirstructure.jpg](external_resources/dirstructure.jpg)
+## Models
+These models may go through changes as time goes
+```
+KuFlexRepo model
+{
+Project Name;
+Creation Date;
+Creator Name;
+Rest of the details will get updated as time goes
+}
+```
+```
+Branch model
+{
+Name;
+UID;
+InheritedFrom; 
+//From where was this branch created
+//Which Branch and Commit did this branch out from
+
+//When creating a new branch it needs to automatically generate an initial commit.
+}
+```
+```
+Commit model
+{
+Commit Name;
+Commit Comment;
+UID;
+InheritedFrom;
+//From which Commit was this inherited from.
+//The inheritedFrom has to be the from the same branch.
+}
+```
+## Architecture and workings
