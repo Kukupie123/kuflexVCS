@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.nio.file.DirectoryNotEmptyException;
 import java.util.Date;
 
@@ -21,18 +22,11 @@ public class RepoService implements IRepoService {
 
 
     @Override
-    public boolean initializeRepo(String directory, String projectName, Date creationDate, String creator, String initialBranch) throws Exception {
-        /*
-        1. Validate if there is already a valid repo setup
-        2. If not we can continue
-        3. create a ".kuflex" folder
-        4. Create a kuflexrepo object
-        5. Initial Commit with all files excluding the ones in .KuFlexignore
-        6. Saving the kuflexrepo as a file inside .kuflex
-         */
+    public boolean initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception {
+
 
         //Check if KuFlex repo already exist
-        if (doesRepoAlreadyExist(directory)) {
+        if (doesRepoAlreadyExist(projectDir)) {
             throw new DirectoryNotEmptyException("KuFlex Repository already exists");
         }
 
@@ -41,18 +35,18 @@ public class RepoService implements IRepoService {
         KuflexRepo kuflexRepo = new KuflexRepo(projectName, creator, creationDate);
 
         //Create repo directories
-        if (!dirService.createRepoDir(directory, kuflexRepo)) {
-            throw new Exception("Failed to create KuFlex repo directory");
+        if (!dirService.createRepoDir(projectDir, kuflexRepo)) {
+            throw new Exception("Failed to create KuFlex repo projectDir");
         }
 
-
         //Initial Commit with all files excluding the ones in .KuFlexIgnore
+        dirService.createDefaultBranchNCommitDir(projectDir);
         return false;
     }
 
     @Override
-    public boolean doesRepoAlreadyExist(String directory) {
-        //TODO: Complete this
-        return false;
+    public boolean doesRepoAlreadyExist(String projectDir) {
+        File repoDir = new File(projectDir + "\\.kuflex");
+        return repoDir.isDirectory();
     }
 }

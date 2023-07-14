@@ -2,13 +2,17 @@ package dev.kukode.services.dir;
 
 import com.google.gson.Gson;
 import dev.kukode.beans.KuflexRepo;
+import dev.kukode.beans.commits.CommitDB;
+import dev.kukode.beans.commits.CommitModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -71,5 +75,38 @@ public class DirService implements IDirService {
         }
 
         return true;
+    }
+
+    @Override
+    public boolean createDefaultBranchNCommitDir(String projectDir) {
+        File branchDir = new File(projectDir + "\\.kuflex\\branches\\default");
+        //create default branch folder
+        if (branchDir.mkdirs()) {
+            File commitDir = new File(branchDir, "\\commits\\default");
+            //create default commit folder
+            if (!commitDir.mkdirs()) {
+                logger.error("Failed to create default commit : " + commitDir.getPath());
+                return false;
+            }
+            //create commits db for default branch
+            File commitDBFile = new File(branchDir, "commitDB.json");
+            try {
+                commitDBFile.createNewFile();
+                CommitDB commitDB = new CommitDB();
+                commitDB.commits = new ArrayList<>();
+                commitDB.commits.add(new CommitModel("initial commit", "", "", ""));
+                Gson gson = new Gson();
+                String jsonData = gson.toJson(commitDB);
+                try (FileWriter commitDBWriter = new FileWriter(commitDBFile)) {
+                    commitDBWriter.write(jsonData);
+                }
+            } catch (IOException e) {
+                logger.error(e.getMessage() + " : \n" + Arrays.toString(e.getStackTrace()));
+            }
+
+            return true;
+        }
+        logger.error("Failed to create branch default directory " + projectDir);
+        return false;
     }
 }

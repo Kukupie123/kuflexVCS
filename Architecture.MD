@@ -89,3 +89,7 @@ Default Branch and Commit will be created later.
 * Create a special branch. The reason I call it special is because it defies the normal rule of creating a branch. <br>
 A branch needs to be created from another branch and another commit but this one doesn't need them.
 #### Creating Initial Special Branch
+* Add new record in Branch DB
+* Add new directory for the branch
+* Create initial Commit <br>
+An initial Commit is going to copy all the files that are part of the project's snapshot

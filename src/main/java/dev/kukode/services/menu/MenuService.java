@@ -24,6 +24,7 @@ public class MenuService {
         }
 
         Scanner scanner = new Scanner(System.in);
+        //noinspection InfiniteLoopStatement
         while (true) {
             System.out.println("1. Initialize");
             int choice = scanner.nextInt();
@@ -32,9 +33,8 @@ public class MenuService {
                     System.out.println("Type the name of the project");
                     String projectName = scanner.next();
                     System.out.println("Type the name of the initial Branch");
-                    String branchName = scanner.next();
                     Date createdDate = new Date();
-                    repoService.initializeRepo(path,projectName,createdDate,"Random Creator",branchName);
+                    repoService.initializeRepo(path,projectName,createdDate,"Random Creator");
                 default:
                     break;
             }
