@@ -1,7 +1,16 @@
+/*
+ * Copyright (C) 2023 KUKODE. - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package dev.kukode.services.repo;
 
 import com.google.gson.Gson;
 import dev.kukode.beans.KuflexRepo;
+import dev.kukode.beans.branches.BranchDB;
+import dev.kukode.beans.branches.BranchModel;
 import dev.kukode.beans.commits.CommitDB;
 import dev.kukode.beans.commits.CommitModel;
 import org.slf4j.Logger;
@@ -17,6 +26,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+@SuppressWarnings("SameParameterValue")
 @Service
 public class RepoService implements IRepoService {
     Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -93,7 +103,7 @@ public class RepoService implements IRepoService {
                 commitDBFile.createNewFile();
                 CommitDB commitDB = new CommitDB();
                 commitDB.commits = new ArrayList<>();
-                commitDB.commits.add(new CommitModel("initial commit", "", "", ""));
+                commitDB.commits.add(new CommitModel("initial commit", "", new Date(), "", ""));
                 Gson gson = new Gson();
                 String jsonData = gson.toJson(commitDB);
                 try (FileWriter commitDBWriter = new FileWriter(commitDBFile)) {
@@ -126,10 +136,62 @@ public class RepoService implements IRepoService {
             throw new Exception("Failed to create KuFlex repo projectDir");
         }
 
-        //Initial Commit with all files excluding the ones in .KuFlexIgnore
-        createDefaultBranchNCommitDir(projectDir);
+        //Create initial branch
+        logger.info("Initial Branch Creation");
+        BranchModel defaultBranch = createInitialBranch(projectDir, "default");
+        //Create initial Commit
+        createInitialCommit(projectDir, "Initial Commit", "", defaultBranch.getUID());
+        //Update initial Commit value and initial Branch value in kuflexRepo.json
 
         return false;
+    }
+
+    private BranchModel createInitialBranch(String projectDir, String branchName) throws Exception {
+        //Create BranchModel
+        BranchModel branchModel = new BranchModel(branchName, new Date(), "", "");
+        //Create branch directory
+        File branchDir = new File(projectDir + "\\.kuflex\\branches\\" + branchModel.getUID());
+        if (!branchDir.mkdirs()) {
+            throw new Exception("Failed to create " + branchName + " initial branch directories");
+        }
+        //Create branch DB
+        File branchDBFile = new File(projectDir + "\\.kuflex\\branchesDB.json");
+        if (!branchDBFile.createNewFile()) {
+            throw new Exception("Failed to create branch DB");
+        }
+        //Write DB content
+        try (FileWriter branchDBWriter = new FileWriter(branchDBFile)) {
+            BranchDB branchDB = new BranchDB();
+            branchDB.branches = new ArrayList<>();
+            branchDB.branches.add(branchModel);
+            Gson gson = new Gson();
+            String jsonData = gson.toJson(branchDB);
+            branchDBWriter.write(jsonData);
+            return branchModel;
+        }
+    }
+
+    private CommitModel createInitialCommit(String projectDir, String commitName, String commitComment, String branchID) throws Exception {
+        //Create commit model
+        CommitModel commitModel = new CommitModel(commitName, commitComment, new Date(), branchID, "");
+        //Create commit directory
+        File commitDir = new File(projectDir + "\\.kuflex\\branches\\" + branchID + "\\" + commitModel.getUID());
+        if (!commitDir.mkdirs()) {
+            throw new Exception("Failed to create commit directory");
+        }
+        //Create CommitDB file
+        File commitDB = new File(projectDir + "\\.kuflex\\branches\\" + branchID + "\\commitsDB.json");
+        if (!commitDB.createNewFile()) {
+            throw new Exception("Failed to create commit DB File");
+        }
+        //Write the new commit to commitDB file
+        try (FileWriter fileWriter = new FileWriter(commitDB)) {
+            Gson gson = new Gson();
+            String jsonDate = gson.toJson(commitModel);
+            fileWriter.write(jsonDate);
+        }
+        //TODO: Take Snapshot of project files
+        return commitModel;
     }
 
     @Override

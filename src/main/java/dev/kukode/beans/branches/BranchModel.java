@@ -5,25 +5,26 @@
  * is strictly prohibited.
  */
 
-package dev.kukode.beans.commits;
+package dev.kukode.beans.branches;
 
 import java.util.Date;
 import java.util.UUID;
 
-public class CommitModel {
+public class BranchModel {
     String UID; //UID of the commit
-    String name; //Name of the commit
-    String comment; //Comment of the commit
 
-    Date creationDate; //Creation date
-    String inheritedBranch; //The branch this commit was made from
-    String inheritedCommit; // The commit which this commit comes from
+    String name; //Name of the branch
 
-    public CommitModel(String name, String comment, Date creationDate, String inheritedBranch, String inheritedCommit) {
-        this.creationDate = creationDate;
+    Date creationDate; //Creation Date
+
+    String interhitedBranch;
+
+    String inheritedCommit;
+
+    public BranchModel(String name, Date creationDate, String interhitedBranch, String inheritedCommit) {
         this.name = name;
-        this.comment = comment;
-        this.inheritedBranch = inheritedBranch;
+        this.creationDate = creationDate;
+        this.interhitedBranch = interhitedBranch;
         this.inheritedCommit = inheritedCommit;
         UUID uid = UUID.randomUUID();
         this.UID = uid.toString();
@@ -37,16 +38,12 @@ public class CommitModel {
         return name;
     }
 
-    public String getComment() {
-        return comment;
-    }
-
     public Date getCreationDate() {
         return creationDate;
     }
 
-    public String getInheritedBranch() {
-        return inheritedBranch;
+    public String getInterhitedBranch() {
+        return interhitedBranch;
     }
 
     public String getInheritedCommit() {
