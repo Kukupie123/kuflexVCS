@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 KUKODE. - All Rights Reserved
+ * Copyright (C) 15/07/23, 3:47 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -11,7 +11,6 @@ import com.google.gson.Gson;
 import dev.kukode.beans.KuflexRepo;
 import dev.kukode.beans.branches.BranchDB;
 import dev.kukode.beans.branches.BranchModel;
-import dev.kukode.beans.commits.CommitDB;
 import dev.kukode.beans.commits.CommitModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,10 +18,8 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.nio.file.DirectoryNotEmptyException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -85,37 +82,6 @@ public class RepoService implements IRepoService {
         }
 
         return true;
-    }
-
-    private void createDefaultBranchNCommitDir(String projectDir) {
-        File branchDir = new File(projectDir + "\\.kuflex\\branches\\default");
-        //create default branch folder
-        if (branchDir.mkdirs()) {
-            File commitDir = new File(branchDir, "\\commits\\default");
-            //create default commit folder
-            if (!commitDir.mkdirs()) {
-                logger.error("Failed to create default commit : " + commitDir.getPath());
-                return;
-            }
-            //create commits db for default branch
-            File commitDBFile = new File(branchDir, "commitDB.json");
-            try {
-                commitDBFile.createNewFile();
-                CommitDB commitDB = new CommitDB();
-                commitDB.commits = new ArrayList<>();
-                commitDB.commits.add(new CommitModel("initial commit", "", new Date(), "", ""));
-                Gson gson = new Gson();
-                String jsonData = gson.toJson(commitDB);
-                try (FileWriter commitDBWriter = new FileWriter(commitDBFile)) {
-                    commitDBWriter.write(jsonData);
-                }
-            } catch (IOException e) {
-                logger.error(e.getMessage() + " : \n" + Arrays.toString(e.getStackTrace()));
-            }
-
-            return;
-        }
-        logger.error("Failed to create branch default directory " + projectDir);
     }
 
     @Override
