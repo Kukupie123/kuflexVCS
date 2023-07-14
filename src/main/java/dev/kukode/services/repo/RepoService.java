@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 15/07/23, 3:47 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 15/07/23, 4:33 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -8,7 +8,8 @@
 package dev.kukode.services.repo;
 
 import com.google.gson.Gson;
-import dev.kukode.beans.KuflexRepo;
+import dev.kukode.beans.KuflexRepoModel;
+import dev.kukode.beans.SnapshotModel;
 import dev.kukode.beans.branches.BranchDB;
 import dev.kukode.beans.branches.BranchModel;
 import dev.kukode.beans.commits.CommitModel;
@@ -28,29 +29,30 @@ import java.util.List;
 public class RepoService implements IRepoService {
     Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private List<String> getProjectFilesPath(String projectDir) {
-          /*
-        RECURSIVELY access subdirectories
-        1. Access the rootDir
-        2. Get list of files in rootDir
-        3. Iterate the list of files (call it f)
-            3.1 If "f" is a file then add it to the list
-            3.2 If "f" is a directory then add the return value of getFiles(f) to the list
-         */
+    private List<String> getProjectFilesPath(String projectDir, String basePath) {
+    /*
+    RECURSIVELY access subdirectories
+    1. Access the rootDir
+    2. Get list of files in rootDir
+    3. Iterate the list of files (call it f)
+        3.1 If "f" is a file then add its relative path to the list
+        3.2 If "f" is a directory then add the return value of getFiles(f) to the list
+     */
         List<String> filePaths = new ArrayList<>();
 
-        //Access RootDir
+        // Access RootDir
         File file = new File(projectDir);
 
-        //Iterate rootDir's subdirectories
+        // Iterate rootDir's subdirectories
         if (file.isDirectory()) {
             File[] dirFiles = file.listFiles();
             if (dirFiles == null) return filePaths;
             for (File dirFile : dirFiles) {
                 if (dirFile.isFile()) {
-                    filePaths.add(dirFile.getAbsolutePath());
+                    String relativePath = basePath + File.separator + dirFile.getName();
+                    filePaths.add(relativePath);
                 } else {
-                    List<String> subDirFiles = getProjectFilesPath(dirFile.getAbsolutePath());
+                    List<String> subDirFiles = getProjectFilesPath(dirFile.getAbsolutePath(), basePath + File.separator + dirFile.getName());
                     filePaths.addAll(subDirFiles);
                 }
             }
@@ -58,7 +60,8 @@ public class RepoService implements IRepoService {
         return filePaths;
     }
 
-    private boolean createRepoDir(String dir, KuflexRepo kuflexRepo) throws Exception {
+
+    private boolean createRepoDir(String dir, KuflexRepoModel kuflexRepo) throws Exception {
         logger.info("Create Repo dir for path : " + dir + " and projectName " + kuflexRepo.projectName);
         //Create the necessary directories
         File rootDir = new File(dir);
@@ -95,7 +98,7 @@ public class RepoService implements IRepoService {
 
         //Create kuflexrepo
         logger.info("Creating Repository folder with projectName : " + projectName);
-        KuflexRepo kuflexRepo = new KuflexRepo(projectName, creator, creationDate);
+        KuflexRepoModel kuflexRepo = new KuflexRepoModel(projectName, creator, creationDate);
 
         //Create repo directories
         if (!createRepoDir(projectDir, kuflexRepo)) {
@@ -141,7 +144,8 @@ public class RepoService implements IRepoService {
         //Create commit model
         CommitModel commitModel = new CommitModel(commitName, commitComment, new Date(), branchID, "");
         //Create commit directory
-        File commitDir = new File(projectDir + "\\.kuflex\\branches\\" + branchID + "\\" + commitModel.getUID());
+        String commitPath = projectDir + "\\.kuflex\\branches\\" + branchID + "\\" + commitModel.getUID();
+        File commitDir = new File(commitPath);
         if (!commitDir.mkdirs()) {
             throw new Exception("Failed to create commit directory");
         }
@@ -156,8 +160,38 @@ public class RepoService implements IRepoService {
             String jsonDate = gson.toJson(commitModel);
             fileWriter.write(jsonDate);
         }
-        //TODO: Take Snapshot of project files
+
+        //Create snapshot file for the commit
+        createSnapshot(projectDir, commitPath);
+        //TODO: Create File Content Diff
         return commitModel;
+    }
+
+    private void createSnapshot(String projectDir, String commitPath) throws Exception {
+        //Create snapshot file in commit path
+        File snapshotFile = new File(commitPath, "kuFlexSnap.json");
+        if (!snapshotFile.createNewFile()) {
+            throw new Exception("Failed to create snapshot");
+        }
+
+        //Get file paths
+        List<String> filePaths = getProjectFilesPath(projectDir, "");
+        List<String> pathToRemove = new ArrayList<>();
+        for (String path : filePaths) {
+            if (path.contains(".kuflex")) {
+                pathToRemove.add(path);
+            }
+        }
+        filePaths.removeAll(pathToRemove);
+
+        //Write file path to snapshot
+        try (FileWriter snapshotWriter = new FileWriter(snapshotFile)) {
+            SnapshotModel snapshotModel = new SnapshotModel();
+            snapshotModel.files = filePaths;
+            Gson gson = new Gson();
+            String jsonData = gson.toJson(snapshotModel);
+            snapshotWriter.write(jsonData);
+        }
     }
 
     @Override

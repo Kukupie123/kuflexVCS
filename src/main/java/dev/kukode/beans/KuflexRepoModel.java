@@ -1,13 +1,18 @@
-package dev.kukode.beans;
+/*
+ * Copyright (C) 15/07/23, 4:33 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
 
-import org.springframework.stereotype.Component;
+package dev.kukode.beans;
 
 import java.util.Date;
 import java.util.List;
 
-public class KuflexRepo {
+public class KuflexRepoModel {
 
-    public KuflexRepo(String projectName, String creatorName, Date creationDate) {
+    public KuflexRepoModel(String projectName, String creatorName, Date creationDate) {
         this.projectName = projectName;
         this.creatorName = creatorName;
         this.creationDate = creationDate;
