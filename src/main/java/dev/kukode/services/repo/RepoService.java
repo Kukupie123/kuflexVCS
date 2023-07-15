@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 15/07/23, 7:15 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 15/07/23, 7:18 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -167,7 +167,6 @@
 
             //Create snapshot file for the commit
             SnapshotModel snapshotModel = createSnapshot(projectDir, commitPath);
-            //TODO: Create File Content Diff
             //Create Initial File copy
             createInitialFileCopy(projectDir, snapshotModel, commitPath);
 
