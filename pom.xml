@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright (C) 15/07/23, 7:15 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+  ~ Copyright (C) 15/07/23, 8:51 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
   ~
   ~ Unauthorized copying or redistribution of this file in source and binary forms via any medium
   ~ is strictly prohibited.
@@ -55,6 +55,14 @@
             <groupId>com.googlecode.java-diff-utils</groupId>
             <artifactId>diffutils</artifactId>
             <version>1.3.0</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.28</version>
+            <scope>provided</scope>
         </dependency>
 
 

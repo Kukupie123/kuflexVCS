@@ -1,9 +1,26 @@
+/*
+ * Copyright (C) 15/07/23, 8:51 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ *
+ * Unauthorized copying or redistribution of this file in source and binary forms via any medium
+ * is strictly prohibited.
+ */
+
 package dev.kukode.services.repo;
+
+import dev.kukode.models.KuflexRepoModel;
 
 import java.util.Date;
 
 
 public interface IRepoService {
+
+
+    KuflexRepoModel loadKuFlexRepoFile(String projectDir) throws Exception;
+
+    boolean updateKuFlexRepo(String projectDir, KuflexRepoModel kuflexRepoModel) throws Exception;
+
+    boolean doesRepoAlreadyExist(String projectDir);
+
     /**
      * Initialize the repository with the respective folders and files
      *
@@ -16,6 +33,7 @@ public interface IRepoService {
      */
     boolean initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception;
 
-    boolean doesRepoAlreadyExist(String projectDir);
+    void loadRepo(String projectDir);
+
 
 }

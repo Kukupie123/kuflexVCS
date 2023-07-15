@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 15/07/23, 7:18 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 15/07/23, 8:51 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -27,7 +27,6 @@
     import java.util.List;
     import java.util.UUID;
 
-    @SuppressWarnings("SameParameterValue")
     @Service
     public class RepoService implements IRepoService {
         final Gson gson;
@@ -36,6 +35,69 @@
         public RepoService(Gson gson) {
             this.gson = gson;
         }
+
+
+        @Override
+        public boolean initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception {
+
+            //Check if KuFlex repo already exist
+            if (doesRepoAlreadyExist(projectDir)) {
+                throw new DirectoryNotEmptyException("KuFlex Repository already exists");
+            }
+
+            //Create kuflexrepo
+            logger.info("Creating Repository folder with projectName : " + projectName);
+            KuflexRepoModel kuflexRepo = new KuflexRepoModel(projectName, creator, creationDate);
+
+            //Create repo directories
+            if (!createRepoDir(projectDir, kuflexRepo)) {
+                throw new Exception("Failed to create KuFlex repo projectDir");
+            }
+
+            //Create initial branch
+            logger.info("Initial Branch Creation");
+            BranchModel defaultBranch = createInitialBranch(projectDir, "default");
+            //Create initial Commit
+            CommitModel defaultCommit = createInitialCommit(projectDir, "Initial Commit", "", defaultBranch.getUID());
+            //Update initial Commit value and initial Branch value in kuflexRepo.json
+            KuflexRepoModel kuflexRepoModel = loadKuFlexRepoFile(projectDir);
+            kuflexRepoModel.activeBranch = defaultBranch.getUID();
+            kuflexRepoModel.activeCommit = defaultCommit.getUID();
+            kuflexRepoModel.initialBranch = defaultBranch.getUID();
+            kuflexRepoModel.initialBranch = defaultCommit.getUID();
+            updateKuFlexRepo(projectDir, kuflexRepoModel);
+            return false;
+        }
+
+        @Override
+        public KuflexRepoModel loadKuFlexRepoFile(String projectDir) throws Exception {
+            File file = new File(projectDir + "\\.kuflex", "kuFlexRepo.json");
+            if (!file.isFile()) {
+                throw new Exception("Failed to load kuFlexRepo.json");
+            }
+            return gson.fromJson(Files.readString(file.toPath()), KuflexRepoModel.class);
+        }
+
+        @Override
+        public boolean updateKuFlexRepo(String projectDir, KuflexRepoModel kuflexRepoModel) throws Exception {
+            File repoFile = new File(projectDir + "\\.kuflex", "kuFlexRepo.json");
+            if (!repoFile.exists() || !repoFile.isFile()) {
+                throw new Exception("Repo doesn't exist or is not a file");
+            }
+            try (FileWriter fileWriter = new FileWriter(repoFile)) {
+                String data = gson.toJson(kuflexRepoModel);
+                fileWriter.write(data);
+                return true;
+            }
+        }
+
+
+        @Override
+        public boolean doesRepoAlreadyExist(String projectDir) {
+            File repoDir = new File(projectDir + "\\.kuflex");
+            return repoDir.isDirectory();
+        }
+
 
         private List<String> getProjectFilesPath(String projectDir, String basePath) {
         /*
@@ -68,7 +130,6 @@
             return filePaths;
         }
 
-
         private boolean createRepoDir(String dir, KuflexRepoModel kuflexRepo) throws Exception {
             logger.info("Create Repo dir for path : " + dir + " and projectName " + kuflexRepo.projectName);
             //Create the necessary directories
@@ -92,33 +153,6 @@
             }
 
             return true;
-        }
-
-        @Override
-        public boolean initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception {
-
-            //Check if KuFlex repo already exist
-            if (doesRepoAlreadyExist(projectDir)) {
-                throw new DirectoryNotEmptyException("KuFlex Repository already exists");
-            }
-
-            //Create kuflexrepo
-            logger.info("Creating Repository folder with projectName : " + projectName);
-            KuflexRepoModel kuflexRepo = new KuflexRepoModel(projectName, creator, creationDate);
-
-            //Create repo directories
-            if (!createRepoDir(projectDir, kuflexRepo)) {
-                throw new Exception("Failed to create KuFlex repo projectDir");
-            }
-
-            //Create initial branch
-            logger.info("Initial Branch Creation");
-            BranchModel defaultBranch = createInitialBranch(projectDir, "default");
-            //Create initial Commit
-            createInitialCommit(projectDir, "Initial Commit", "", defaultBranch.getUID());
-            //Update initial Commit value and initial Branch value in kuflexRepo.json
-
-            return false;
         }
 
         private BranchModel createInitialBranch(String projectDir, String branchName) throws Exception {
@@ -233,9 +267,4 @@
 
         }
 
-        @Override
-        public boolean doesRepoAlreadyExist(String projectDir) {
-            File repoDir = new File(projectDir + "\\.kuflex");
-            return repoDir.isDirectory();
-        }
     }
