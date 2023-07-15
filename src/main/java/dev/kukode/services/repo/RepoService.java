@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 16/07/23, 1:18 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 16/07/23, 1:39 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -15,6 +15,7 @@
     import dev.kukode.models.branches.BranchModel;
     import dev.kukode.models.commits.CommitDB;
     import dev.kukode.models.commits.CommitModel;
+    import dev.kukode.services.dirNFile.DirNFileService;
     import org.slf4j.Logger;
     import org.slf4j.LoggerFactory;
     import org.springframework.stereotype.Service;
@@ -31,28 +32,30 @@
     @Service
     public class RepoService implements IRepoService {
         final Gson gson;
+        final DirNFileService dirService;
         Logger logger = LoggerFactory.getLogger(this.getClass());
 
-        public RepoService(Gson gson) {
+        public RepoService(Gson gson, DirNFileService dirService) {
             this.gson = gson;
+            this.dirService = dirService;
         }
 
 
         @Override
         public boolean initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception {
+            //TODO: Clean up and move dir functions to dir service
             //Check if KuFlex repo already exist
             if (doesRepoAlreadyExist(projectDir)) {
                 throw new DirectoryNotEmptyException("KuFlex Repository already exists");
             }
 
-            //Create kuflexrepo
+            //Create kuflexrepo model
             logger.info("Creating Repository folder with projectName : " + projectName);
             KuflexRepoModel kuflexRepo = new KuflexRepoModel(projectName, creator, creationDate);
-
-            //Create repo directories
-            if (!createRepoDir(projectDir, kuflexRepo)) {
-                throw new Exception("Failed to create KuFlex repo projectDir");
-            }
+            //Create .KuFlex repo directory
+            dirService.createKuFlexRepoDir(projectDir);
+            //create the kuflex repository file
+            dirService.createKuFlexRepoFile(projectDir, kuflexRepo);
 
             //Create initial branch
             logger.info("Initial Branch Creation");
@@ -195,26 +198,10 @@
 
         private boolean createRepoDir(String dir, KuflexRepoModel kuflexRepo) throws Exception {
             logger.info("Create Repo dir for path : " + dir + " and projectName " + kuflexRepo.projectName);
-            //Create the necessary directories
-            File rootDir = new File(dir);
-            if (!rootDir.isDirectory()) {
-                throw new Exception("Not a directory");
-            }
-            File kuFlexDir = new File(rootDir, ".kuflex");
-            if (!kuFlexDir.mkdir()) {
-                throw new Exception("Failed to create .kuFlex repository folder");
-            }
+            //Create .KuFlex repo directory
+            dirService.createKuFlexRepoDir(dir);
             //create the kuflex repository file
-            String kuFlexRepoJSON = gson.toJson(kuflexRepo);
-
-            //Save kuFlexRepo to ".kuflex" folder
-            File kuFlexRepoFile = new File(kuFlexDir, "kuFlexRepo.json");
-            try (FileWriter fileWriter = new FileWriter(kuFlexRepoFile)) {
-                fileWriter.write(kuFlexRepoJSON);
-            } catch (Exception e) {
-                throw new Exception(e);
-            }
-
+            dirService.createKuFlexRepoFile(dir, kuflexRepo);
             return true;
         }
 
