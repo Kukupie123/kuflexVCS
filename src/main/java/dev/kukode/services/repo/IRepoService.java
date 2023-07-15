@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 15/07/23, 9:43 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 15/07/23, 9:52 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -23,5 +23,8 @@ public interface IRepoService {
      * @throws Exception File-Write exception
      */
     boolean initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception;
+
+
+    boolean createNewCommit(WIP parameter); //TODO: Complete this
 
 }
