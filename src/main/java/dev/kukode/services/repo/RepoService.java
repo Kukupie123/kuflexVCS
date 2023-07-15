@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 15/07/23, 9:31 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 15/07/23, 9:43 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -68,15 +68,7 @@
             return false;
         }
 
-        @Override
-        public void loadRepository(String projectDir) throws Exception {
-            //IMPORTANT : In future we validate repo (two validation 1: initial and active commits 2: full commit and branch validation)
 
-            KuflexRepoModel kuflexRepoModel = getKuFlexRepo(projectDir);
-            //TODO: Complete this first
-        }
-
-        @Override
         public KuflexRepoModel getKuFlexRepo(String projectDir) throws Exception {
             File file = new File(projectDir + "\\.kuflex", "kuFlexRepo.json");
             if (!file.isFile()) {
@@ -85,8 +77,7 @@
             return gson.fromJson(Files.readString(file.toPath()), KuflexRepoModel.class);
         }
 
-        @Override
-        public boolean updateKuFlexRepo(String projectDir, KuflexRepoModel kuflexRepoModel) throws Exception {
+        private boolean updateKuFlexRepo(String projectDir, KuflexRepoModel kuflexRepoModel) throws Exception {
             File repoFile = new File(projectDir + "\\.kuflex", "kuFlexRepo.json");
             if (!repoFile.exists() || !repoFile.isFile()) {
                 throw new Exception("Repo doesn't exist or is not a file");
@@ -99,8 +90,7 @@
         }
 
 
-        @Override
-        public boolean doesRepoAlreadyExist(String projectDir) {
+        private boolean doesRepoAlreadyExist(String projectDir) {
             File repoDir = new File(projectDir + "\\.kuflex");
             return repoDir.isDirectory();
         }
