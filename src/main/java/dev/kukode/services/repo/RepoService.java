@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 15/07/23, 9:43 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 16/07/23, 12:40 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -13,6 +13,7 @@
     import dev.kukode.models.SnapshotModel;
     import dev.kukode.models.branches.BranchDB;
     import dev.kukode.models.branches.BranchModel;
+    import dev.kukode.models.commits.CommitDB;
     import dev.kukode.models.commits.CommitModel;
     import org.slf4j.Logger;
     import org.slf4j.LoggerFactory;
@@ -68,8 +69,41 @@
             return false;
         }
 
+        @Override
+        public boolean createNewCommit(String projectDir, String commitName, String comment) throws Exception {
+            var kuflexRepo = getKuFlexRepo(projectDir);
+            //Current commit
+            CommitModel currentCommitModel = getCommitByID(projectDir, kuflexRepo.activeCommit, kuflexRepo.activeBranch);
 
-        public KuflexRepoModel getKuFlexRepo(String projectDir) throws Exception {
+            //Create New commit
+            CommitModel newCommitModel = new CommitModel(commitName, comment, new Date(), kuflexRepo.activeBranch, kuflexRepo.activeCommit);
+            //Create New commit directory
+            File newCommitFile = new File(projectDir + "\\.kuflex\\branches\\" + kuflexRepo.activeBranch, newCommitModel.getUID());
+            if (!newCommitFile.mkdir()) {
+                throw new Exception("Failed to create new Commit directory");
+            }
+            //Add new commit to commitDB of DB
+            String newCommitPath = projectDir + "\\.kuflex\\branches\\" + kuflexRepo.activeCommit + "\\" + newCommitModel.getUID();
+            //Take project snapshot for new commit
+            createSnapshot(projectDir, newCommitPath);
+
+            List<String> sameFiles = new ArrayList<>(); //Files with the same paths between the commits
+            List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit
+            List<String> addedFiles = new ArrayList<>(); //These files are new to the commit
+
+            return false;
+        }
+
+        private void addCommitToDB(String projectDir, String branchID, CommitModel commitModel) {
+
+        }
+
+        private CommitModel getCommitByID(String projectDir, String commitID, String branchID) {
+            return null;
+        }
+
+
+        private KuflexRepoModel getKuFlexRepo(String projectDir) throws Exception {
             File file = new File(projectDir + "\\.kuflex", "kuFlexRepo.json");
             if (!file.isFile()) {
                 throw new Exception("Failed to load kuFlexRepo.json");
@@ -186,13 +220,16 @@
                 throw new Exception("Failed to create commit directory");
             }
             //Create CommitDB file
-            File commitDB = new File(projectDir + "\\.kuflex\\branches\\" + branchID + "\\commitsDB.json");
-            if (!commitDB.createNewFile()) {
+            File commitDBFile = new File(projectDir + "\\.kuflex\\branches\\" + branchID + "\\commitsDB.json");
+            if (!commitDBFile.createNewFile()) {
                 throw new Exception("Failed to create commit DB File");
             }
-            //Write the new commit to commitDB file
-            try (FileWriter fileWriter = new FileWriter(commitDB)) {
-                String jsonDate = gson.toJson(commitModel);
+            //Write the new commit to commitDBFile file
+            try (FileWriter fileWriter = new FileWriter(commitDBFile)) {
+                CommitDB commitDB = new CommitDB();
+                commitDB.commits = new ArrayList<>();
+                commitDB.commits.add(commitModel);
+                String jsonDate = gson.toJson(commitDB);
                 fileWriter.write(jsonDate);
             }
 
