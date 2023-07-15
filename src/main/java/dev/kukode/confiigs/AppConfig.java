@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 15/07/23, 7:15 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 15/07/23, 9:22 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -22,4 +22,5 @@ public class AppConfig {
     public Gson gson() {
         return new Gson();
     }
+
 }

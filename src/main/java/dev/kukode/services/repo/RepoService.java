@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 15/07/23, 8:51 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 15/07/23, 9:22 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -39,7 +39,6 @@
 
         @Override
         public boolean initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception {
-
             //Check if KuFlex repo already exist
             if (doesRepoAlreadyExist(projectDir)) {
                 throw new DirectoryNotEmptyException("KuFlex Repository already exists");
@@ -60,7 +59,7 @@
             //Create initial Commit
             CommitModel defaultCommit = createInitialCommit(projectDir, "Initial Commit", "", defaultBranch.getUID());
             //Update initial Commit value and initial Branch value in kuflexRepo.json
-            KuflexRepoModel kuflexRepoModel = loadKuFlexRepoFile(projectDir);
+            KuflexRepoModel kuflexRepoModel = getKuFlexRepo(projectDir);
             kuflexRepoModel.activeBranch = defaultBranch.getUID();
             kuflexRepoModel.activeCommit = defaultCommit.getUID();
             kuflexRepoModel.initialBranch = defaultBranch.getUID();
@@ -70,7 +69,15 @@
         }
 
         @Override
-        public KuflexRepoModel loadKuFlexRepoFile(String projectDir) throws Exception {
+        public void loadRepository(String projectDir) throws Exception {
+            //IMPORTANT : In future we validate repo (two validation 1: initial and active commits 2: full commit and branch validation)
+
+            KuflexRepoModel kuflexRepoModel = getKuFlexRepo(projectDir);
+
+        }
+
+        @Override
+        public KuflexRepoModel getKuFlexRepo(String projectDir) throws Exception {
             File file = new File(projectDir + "\\.kuflex", "kuFlexRepo.json");
             if (!file.isFile()) {
                 throw new Exception("Failed to load kuFlexRepo.json");

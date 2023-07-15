@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 15/07/23, 8:51 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 15/07/23, 9:22 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -15,7 +15,7 @@ import java.util.Date;
 public interface IRepoService {
 
 
-    KuflexRepoModel loadKuFlexRepoFile(String projectDir) throws Exception;
+    KuflexRepoModel getKuFlexRepo(String projectDir) throws Exception;
 
     boolean updateKuFlexRepo(String projectDir, KuflexRepoModel kuflexRepoModel) throws Exception;
 
@@ -33,7 +33,7 @@ public interface IRepoService {
      */
     boolean initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception;
 
-    void loadRepo(String projectDir);
+    void loadRepository(String projectDir) throws Exception;
 
 
 }
