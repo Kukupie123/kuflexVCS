@@ -5,11 +5,10 @@
  * is strictly prohibited.
  */
 
-package dev.kukode.services.commit;
+package dev.kukode.services.branch;
 
 import org.springframework.stereotype.Service;
 
 @Service
-public class CommitService {
-    //TODO: Move functions from repo to commit
+public class BranchService implements IBranchService {
 }

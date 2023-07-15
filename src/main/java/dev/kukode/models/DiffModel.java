@@ -5,11 +5,9 @@
  * is strictly prohibited.
  */
 
-package dev.kukode.services.commit;
+package dev.kukode.models;
 
-import org.springframework.stereotype.Service;
-
-@Service
-public class CommitService {
-    //TODO: Move functions from repo to commit
+public class DiffModel {
+    public String path;
+    public String diff;
 }

@@ -5,11 +5,11 @@
  * is strictly prohibited.
  */
 
-package dev.kukode.services.commit;
+package dev.kukode.models.commits;
 
-import org.springframework.stereotype.Service;
 
-@Service
-public class CommitService {
-    //TODO: Move functions from repo to commit
+import java.util.List;
+
+public class CommitDB {
+    public List<CommitModel> commits;
 }
