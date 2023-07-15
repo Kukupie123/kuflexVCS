@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 16/07/23, 12:40 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 16/07/23, 1:47 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -19,10 +19,9 @@ public interface IRepoService {
      * @param projectName  Name of the project
      * @param creationDate Date of creation
      * @param creator      Name of Creator
-     * @return true if successful
      * @throws Exception File-Write exception
      */
-    boolean initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception;
+    void initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception;
 
 
 

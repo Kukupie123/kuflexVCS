@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 16/07/23, 1:39 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 16/07/23, 1:47 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.nio.file.Files;
 
 @Service
 public class DirNFileService {
@@ -43,11 +44,32 @@ public class DirNFileService {
     public void createKuFlexRepoFile(String projectDir, KuflexRepoModel kuflexRepoModel) throws Exception {
         File kuFlexRepoFile = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPO);
         if (!kuFlexRepoFile.createNewFile()) {
-            throw new Exception("Failed to create KuFlexRepoFile " + ConstantNames.KUFLEXREPO);
+            throw new Exception("Failed to create " + ConstantNames.KUFLEXREPO);
         }
         try (FileWriter kuFlexRepoWriter = new FileWriter(kuFlexRepoFile)) {
             String data = gson.toJson(kuflexRepoModel);
             kuFlexRepoWriter.write(data);
         }
     }
+
+    public KuflexRepoModel getKuFlexRepoFile(String projectDir) throws Exception {
+        File file = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPO);
+        if (!file.isFile()) {
+            throw new Exception("Failed to load " + ConstantNames.KUFLEXREPO);
+        }
+        return gson.fromJson(Files.readString(file.toPath()), KuflexRepoModel.class);
+    }
+
+    public boolean updateKuFlexRepo(String projectDir, KuflexRepoModel kuflexRepoModel) throws Exception {
+        File repoFile = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPO);
+        if (!repoFile.exists() || !repoFile.isFile()) {
+            throw new Exception("Repo doesn't exist or is not a file");
+        }
+        try (FileWriter fileWriter = new FileWriter(repoFile)) {
+            String data = gson.toJson(kuflexRepoModel);
+            fileWriter.write(data);
+            return true;
+        }
+    }
+
 }
