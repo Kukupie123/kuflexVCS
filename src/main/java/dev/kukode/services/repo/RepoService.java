@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 16/07/23, 1:47 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 16/07/23, 8:56 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -67,7 +67,7 @@
             CommitModel defaultCommit = createInitialCommit(projectDir, "Initial Commit", "", defaultBranch.getUID());
 
             //Update initial Commit value and initial Branch value in kuflexRepo.json
-            KuflexRepoModel kuflexRepoModel = dirService.getKuFlexRepoFile(projectDir);
+            KuflexRepoModel kuflexRepoModel = dirService.getKuFlexRepoModel(projectDir);
             kuflexRepoModel.activeBranch = defaultBranch.getUID();
             kuflexRepoModel.activeCommit = defaultCommit.getUID();
             kuflexRepoModel.initialBranch = defaultCommit.getUID();
@@ -76,7 +76,7 @@
 
         @Override
         public boolean createNewCommit(String projectDir, String commitName, String comment) throws Exception {
-            var kuflexRepo = dirService.getKuFlexRepoFile(projectDir);
+            var kuflexRepo = dirService.getKuFlexRepoModel(projectDir);
             //Current commit
             CommitModel currentCommitModel = getCommitByID(projectDir, kuflexRepo.activeCommit, kuflexRepo.activeBranch);
 
@@ -190,24 +190,14 @@
             //Create BranchModel
             BranchModel branchModel = new BranchModel(branchName, new Date(), "", "");
             //Create branch directory
-            File branchDir = new File(projectDir + "\\.kuflex\\branches\\" + branchModel.getUID());
-            if (!branchDir.mkdirs()) {
-                throw new Exception("Failed to create " + branchName + " initial branch directories");
-            }
+            dirService.createBranchDirectory(projectDir, branchModel.getUID());
             //Create branch DB
-            File branchDBFile = new File(projectDir + "\\.kuflex\\branchesDB.json");
-            if (!branchDBFile.createNewFile()) {
-                throw new Exception("Failed to create branch DB");
-            }
-            //Write DB content
-            try (FileWriter branchDBWriter = new FileWriter(branchDBFile)) {
-                BranchDB branchDB = new BranchDB();
-                branchDB.branches = new ArrayList<>();
-                branchDB.branches.add(branchModel);
-                String jsonData = gson.toJson(branchDB);
-                branchDBWriter.write(jsonData);
-                return branchModel;
-            }
+            dirService.createBranchDBFile(projectDir);
+            //Write branch to branchDBFile
+            BranchDB branchDB = new BranchDB();
+            branchDB.branches = new ArrayList<>();
+            branchDB.branches.add(branchModel);
+            dirService.updateBranchDbFile(projectDir, branchDB);
         }
 
         private CommitModel createInitialCommit(String projectDir, String commitName, String commitComment, String branchID) throws Exception {

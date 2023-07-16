@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 16/07/23, 1:47 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 16/07/23, 8:56 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -9,6 +9,7 @@ package dev.kukode.services.dirNFile;
 
 import com.google.gson.Gson;
 import dev.kukode.models.KuflexRepoModel;
+import dev.kukode.models.branches.BranchDB;
 import dev.kukode.util.ConstantNames;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,11 @@ public class DirNFileService {
         this.gson = gson;
     }
 
-    public void createBranchDirectory() {
+    public void createBranchDirectory(String projectDir, String branchID) throws Exception {
+        File branchDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID);
+        if (!branchDir.mkdirs()) {
+            throw new Exception("Failed to create branch directory for branchID " + branchID);
+        }
     }
 
     public void createCommitDirectory() {
@@ -42,9 +47,9 @@ public class DirNFileService {
     }
 
     public void createKuFlexRepoFile(String projectDir, KuflexRepoModel kuflexRepoModel) throws Exception {
-        File kuFlexRepoFile = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPO);
+        File kuFlexRepoFile = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPOFILE);
         if (!kuFlexRepoFile.createNewFile()) {
-            throw new Exception("Failed to create " + ConstantNames.KUFLEXREPO);
+            throw new Exception("Failed to create " + ConstantNames.KUFLEXREPOFILE);
         }
         try (FileWriter kuFlexRepoWriter = new FileWriter(kuFlexRepoFile)) {
             String data = gson.toJson(kuflexRepoModel);
@@ -52,16 +57,44 @@ public class DirNFileService {
         }
     }
 
-    public KuflexRepoModel getKuFlexRepoFile(String projectDir) throws Exception {
-        File file = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPO);
-        if (!file.isFile()) {
-            throw new Exception("Failed to load " + ConstantNames.KUFLEXREPO);
+    public void createBranchDBFile(String projectDir) throws Exception {
+        File branchDBFile = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.BranchesDBFILE);
+        if (branchDBFile.exists()) {
+            throw new Exception("BranchDBFile already exists");
         }
+        if (!branchDBFile.createNewFile()) {
+            throw new Exception("Failed to create branchDBFile");
+        }
+    }
+
+    public File getKuFlexRepoFile(String projectDir) throws Exception {
+        File file = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPOFILE);
+        if (!file.isFile()) {
+            throw new Exception("Failed to load " + ConstantNames.KUFLEXREPOFILE);
+        }
+        return file;
+    }
+
+    public KuflexRepoModel getKuFlexRepoModel(String projectDir) throws Exception {
+        File file = getKuFlexRepoFile(projectDir);
         return gson.fromJson(Files.readString(file.toPath()), KuflexRepoModel.class);
     }
 
+    public File getBranchDbFile(String projectDir) throws Exception {
+        File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.BranchesDBFILE);
+        if (!file.isFile()) {
+            throw new Exception("Failed to load " + ConstantNames.KUFLEXREPOFILE);
+        }
+        return file;
+    }
+
+    public BranchDB getBranchDbModel(String projectDir) throws Exception {
+        File file = getBranchDbFile(projectDir);
+        return gson.fromJson(Files.readString(file.toPath()), BranchDB.class);
+    }
+
     public boolean updateKuFlexRepo(String projectDir, KuflexRepoModel kuflexRepoModel) throws Exception {
-        File repoFile = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPO);
+        File repoFile = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPOFILE);
         if (!repoFile.exists() || !repoFile.isFile()) {
             throw new Exception("Repo doesn't exist or is not a file");
         }
@@ -71,5 +104,14 @@ public class DirNFileService {
             return true;
         }
     }
+
+    public void updateBranchDbFile(String projectDir, BranchDB branchDB) throws Exception {
+        File branchDbFile = getBranchDbFile(projectDir);
+        String data = gson.toJson(branchDB);
+        try (FileWriter fileWriter = new FileWriter(branchDbFile)) {
+            fileWriter.write(data);
+        }
+    }
+
 
 }
