@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 16/07/23, 8:56 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 16/07/23, 10:18 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -11,6 +11,7 @@ public class ConstantNames {
     public static final String KUFLEXREPOFILE = "KuFlexRepo.json";
     public static final String KUFLEX = ".kuflex";
     public static String BranchesDBFILE = "branchesDB.json";
+    public static String CommitsDBFile = "commitsDb.json";
 
     private ConstantNames() {
     }

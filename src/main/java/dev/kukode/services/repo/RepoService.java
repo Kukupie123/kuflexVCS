@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 16/07/23, 9:05 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 16/07/23, 10:18 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -196,26 +196,18 @@
             //Create commit model
             CommitModel commitModel = new CommitModel(commitName, commitComment, new Date(), branchID, "");
             //Create commit directory
-            String commitPath = projectDir + "\\.kuflex\\branches\\" + branchID + "\\" + commitModel.getUID();
-            File commitDir = new File(commitPath);
-            if (!commitDir.mkdirs()) {
-                throw new Exception("Failed to create commit directory");
-            }
+            dirService.createCommitDir(projectDir, branchID, commitModel.getUID());
+            String commitPath = projectDir + "\\.kuflex\\branches\\" + branchID + "\\" + commitModel.getUID(); //remove in future
             //Create CommitDB file
-            File commitDBFile = new File(projectDir + "\\.kuflex\\branches\\" + branchID + "\\commitsDB.json");
-            if (!commitDBFile.createNewFile()) {
-                throw new Exception("Failed to create commit DB File");
-            }
+            dirService.createCommitDBFileForBranch(projectDir, branchID);
             //Write the new commit to commitDBFile file
-            try (FileWriter fileWriter = new FileWriter(commitDBFile)) {
-                CommitDB commitDB = new CommitDB();
-                commitDB.commits = new ArrayList<>();
-                commitDB.commits.add(commitModel);
-                String jsonDate = gson.toJson(commitDB);
-                fileWriter.write(jsonDate);
-            }
+            CommitDB commitDB = new CommitDB();
+            commitDB.commits = new ArrayList<>();
+            commitDB.commits.add(commitModel);
+            dirService.updateCommitDbForBranch(projectDir, branchID, commitDB);
 
             //Create snapshot file for the commit
+            //TODO: Done upto code above, now do snapshot
             SnapshotModel snapshotModel = createSnapshot(projectDir, commitPath);
             //Create Initial File copy
             createInitialFileCopy(projectDir, snapshotModel, commitPath);
