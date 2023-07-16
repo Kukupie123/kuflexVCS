@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 16/07/23, 8:56 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 16/07/23, 9:05 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -112,6 +112,4 @@ public class DirNFileService {
             fileWriter.write(data);
         }
     }
-
-
 }

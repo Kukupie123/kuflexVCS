@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 16/07/23, 8:56 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 16/07/23, 9:05 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -93,7 +93,6 @@
             //Determine which file has been removed from current branch for moving to vault. To do this we compare the snapshots
             List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit
             //Now comes the hard part. File content Diff and then saving them in diff folder
-
             return false;
         }
 
@@ -177,14 +176,6 @@
             return filePaths;
         }
 
-        private boolean createRepoDir(String dir, KuflexRepoModel kuflexRepo) throws Exception {
-            logger.info("Create Repo dir for path : " + dir + " and projectName " + kuflexRepo.projectName);
-            //Create .KuFlex repo directory
-            dirService.createKuFlexRepoDir(dir);
-            //create the kuflex repository file
-            dirService.createKuFlexRepoFile(dir, kuflexRepo);
-            return true;
-        }
 
         private BranchModel createInitialBranch(String projectDir, String branchName) throws Exception {
             //Create BranchModel
@@ -198,6 +189,7 @@
             branchDB.branches = new ArrayList<>();
             branchDB.branches.add(branchModel);
             dirService.updateBranchDbFile(projectDir, branchDB);
+            return branchModel;
         }
 
         private CommitModel createInitialCommit(String projectDir, String commitName, String commitComment, String branchID) throws Exception {
