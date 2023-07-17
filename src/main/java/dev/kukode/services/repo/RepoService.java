@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 16/07/23, 10:18 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 17/07/23, 6:29 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -86,10 +86,9 @@
             createCommitDirectory(projectDir, newCommitModel.getBranchID(), newCommitModel.getUID());
             //Add new commit to commitDB of DB
             addCommitToDB(projectDir, kuflexRepo.activeBranch, newCommitModel);
-            String newCommitPath = projectDir + "\\.kuflex\\branches\\" + kuflexRepo.activeCommit + "\\" + newCommitModel.getUID();
             //Create project snapshot for new commit
             //TODO: Change create snapshot function
-            createSnapshot(projectDir, newCommitPath);
+            createSnapshot(projectDir, newCommitModel);
             //Determine which file has been removed from current branch for moving to vault. To do this we compare the snapshots
             List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit
             //Now comes the hard part. File content Diff and then saving them in diff folder
@@ -144,39 +143,6 @@
             return repoDir.isDirectory();
         }
 
-
-        private List<String> getProjectFilesPath(String projectDir, String basePath) {
-        /*
-        RECURSIVELY access subdirectories
-        1. Access the rootDir
-        2. Get list of files in rootDir
-        3. Iterate the list of files (call it f)
-            3.1 If "f" is a file then add its relative path to the list
-            3.2 If "f" is a directory then add the return value of getFiles(f) to the list
-         */
-            List<String> filePaths = new ArrayList<>();
-
-            // Access RootDir
-            File file = new File(projectDir);
-
-            // Iterate rootDir's subdirectories
-            if (file.isDirectory()) {
-                File[] dirFiles = file.listFiles();
-                if (dirFiles == null) return filePaths;
-                for (File dirFile : dirFiles) {
-                    if (dirFile.isFile()) {
-                        String relativePath = basePath + File.separator + dirFile.getName();
-                        filePaths.add(relativePath);
-                    } else {
-                        List<String> subDirFiles = getProjectFilesPath(dirFile.getAbsolutePath(), basePath + File.separator + dirFile.getName());
-                        filePaths.addAll(subDirFiles);
-                    }
-                }
-            }
-            return filePaths;
-        }
-
-
         private BranchModel createInitialBranch(String projectDir, String branchName) throws Exception {
             //Create BranchModel
             BranchModel branchModel = new BranchModel(branchName, new Date(), "", "");
@@ -208,22 +174,19 @@
 
             //Create snapshot file for the commit
             //TODO: Done upto code above, now do snapshot
-            SnapshotModel snapshotModel = createSnapshot(projectDir, commitPath);
+            SnapshotModel snapshotModel = createSnapshot(projectDir, commitModel);
             //Create Initial File copy
             createInitialFileCopy(projectDir, snapshotModel, commitPath);
 
             return commitModel;
         }
 
-        private SnapshotModel createSnapshot(String projectDir, String commitPath) throws Exception {
+        private SnapshotModel createSnapshot(String projectDir, CommitModel commitModel) throws Exception {
             //Create snapshot file in commit path
-            File snapshotFile = new File(commitPath, "kuFlexSnap.json");
-            if (!snapshotFile.createNewFile()) {
-                throw new Exception("Failed to create snapshot");
-            }
+            dirService.createCommitSnapshot(projectDir, commitModel.getUID(), commitModel.getBranchID());
 
             //Get file paths
-            List<String> filePaths = getProjectFilesPath(projectDir, "");
+            List<String> filePaths = dirService.getProjectFilesPath(projectDir);
             List<String> pathToRemove = new ArrayList<>();
             for (String path : filePaths) {
                 if (path.contains(".kuflex")) {
@@ -232,14 +195,12 @@
             }
             filePaths.removeAll(pathToRemove);
 
+            SnapshotModel snapshotModel = new SnapshotModel();
+            snapshotModel.files = filePaths;
+
             //Write file path to snapshot
-            try (FileWriter snapshotWriter = new FileWriter(snapshotFile)) {
-                SnapshotModel snapshotModel = new SnapshotModel();
-                snapshotModel.files = filePaths;
-                String jsonData = gson.toJson(snapshotModel);
-                snapshotWriter.write(jsonData);
-                return snapshotModel;
-            }
+            dirService.updateCommitSnapshot(projectDir, commitModel.getUID(), commitModel.getBranchID(), snapshotModel);
+            return snapshotModel;
         }
 
         private void createInitialFileCopy(String projectDir, SnapshotModel snapshotModel, String commitPath) throws Exception {

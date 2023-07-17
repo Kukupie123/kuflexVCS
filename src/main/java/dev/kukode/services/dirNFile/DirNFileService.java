@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 16/07/23, 10:18 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 17/07/23, 6:29 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -9,6 +9,7 @@ package dev.kukode.services.dirNFile;
 
 import com.google.gson.Gson;
 import dev.kukode.models.KuflexRepoModel;
+import dev.kukode.models.SnapshotModel;
 import dev.kukode.models.branches.BranchDB;
 import dev.kukode.models.commits.CommitDB;
 import dev.kukode.util.ConstantNames;
@@ -17,6 +18,8 @@ import org.springframework.stereotype.Service;
 import java.io.File;
 import java.io.FileWriter;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class DirNFileService {
@@ -24,6 +27,32 @@ public class DirNFileService {
 
     public DirNFileService(Gson gson) {
         this.gson = gson;
+    }
+
+    //GENERAL*************
+    public List<String> getProjectFilesPath(String projectDir) {
+        String basePath = "";
+        return getProjectFilesPath(projectDir, basePath);
+    }
+
+    private List<String> getProjectFilesPath(String projectDir, String basePath) {
+        List<String> filePaths = new ArrayList<>();
+        File file = new File(projectDir);
+
+        if (file.isDirectory()) {
+            File[] dirFiles = file.listFiles();
+            if (dirFiles == null) return filePaths;
+            for (File dirFile : dirFiles) {
+                if (dirFile.isFile()) {
+                    String relativePath = basePath + File.separator + dirFile.getName();
+                    filePaths.add(relativePath);
+                } else {
+                    List<String> subDirFiles = getProjectFilesPath(dirFile.getAbsolutePath(), basePath + File.separator + dirFile.getName());
+                    filePaths.addAll(subDirFiles);
+                }
+            }
+        }
+        return filePaths;
     }
 
     //REPOSITORY***********************
@@ -147,6 +176,30 @@ public class DirNFileService {
         String data = gson.toJson(commitDB);
         try (FileWriter fileWriter = new FileWriter(commitDbFile)) {
             fileWriter.write(data);
+        }
+    }
+
+    //SNAPSHOT*************
+    public void createCommitSnapshot(String projectDir, String commitID, String branchID) throws Exception {
+        var snapFile = getCommitSnapshotFile(projectDir, commitID, branchID);
+        if (!snapFile.createNewFile()) {
+            throw new Exception("Failed to create snapshot for commitID : " + commitID + ", branchID : " + branchID);
+        }
+    }
+
+    public File getCommitSnapshotFile(String projectDir, String commitID, String branchID) {
+        return new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID, ConstantNames.SNAPSHOTFILE);
+    }
+
+    public SnapshotModel getCommitSnapshotModel(String projectDir, String commitID, String branchID) throws Exception {
+        File file = getCommitSnapshotFile(projectDir, commitID, branchID);
+        return gson.fromJson(Files.readString(file.toPath()), SnapshotModel.class);
+    }
+
+    public void updateCommitSnapshot(String projectDir, String commitID, String branchID, SnapshotModel snapshotModel) throws Exception {
+        var file = getCommitSnapshotFile(projectDir, commitID, branchID);
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            fileWriter.write(gson.toJson(snapshotModel));
         }
     }
 
