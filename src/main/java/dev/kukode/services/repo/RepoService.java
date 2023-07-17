@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 17/07/23, 6:29 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 17/07/23, 7:05 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -27,7 +27,6 @@
     import java.util.ArrayList;
     import java.util.Date;
     import java.util.List;
-    import java.util.UUID;
 
     @Service
     public class RepoService implements IRepoService {
@@ -173,10 +172,9 @@
             dirService.updateCommitDbForBranch(projectDir, branchID, commitDB);
 
             //Create snapshot file for the commit
-            //TODO: Done upto code above, now do snapshot
             SnapshotModel snapshotModel = createSnapshot(projectDir, commitModel);
             //Create Initial File copy
-            createInitialFileCopy(projectDir, snapshotModel, commitPath);
+            createInitialFileCopy(projectDir, snapshotModel, commitModel);
 
             return commitModel;
         }
@@ -187,6 +185,7 @@
 
             //Get file paths
             List<String> filePaths = dirService.getProjectFilesPath(projectDir);
+            //Remove file paths that are part of kuFlex
             List<String> pathToRemove = new ArrayList<>();
             for (String path : filePaths) {
                 if (path.contains(".kuflex")) {
@@ -195,6 +194,7 @@
             }
             filePaths.removeAll(pathToRemove);
 
+            //Create SnapShotModel and set its values
             SnapshotModel snapshotModel = new SnapshotModel();
             snapshotModel.files = filePaths;
 
@@ -203,34 +203,20 @@
             return snapshotModel;
         }
 
-        private void createInitialFileCopy(String projectDir, SnapshotModel snapshotModel, String commitPath) throws Exception {
+        //TODO: Fix this function
+        private void createInitialFileCopy(String projectDir, SnapshotModel snapshotModel, CommitModel commitModel) throws Exception {
+            //Create diffs directory
+            dirService.createCommitDiffDirectory(projectDir, commitModel.getUID(), commitModel.getBranchID());
             for (String s : snapshotModel.files) {
-                //Get original files
+                //Get original file
                 File file = new File(projectDir + s);
 
-                //Create diffs directory
-                File diffDir = new File(commitPath, "diffs");
-                if (!(diffDir.exists() && diffDir.isDirectory())) {
-                    if (!diffDir.mkdir()) {
-                        throw new Exception("Failed to create diff folder although it didn't exist in commit : " + commitPath);
-                    }
-                }
-
                 //Save diff file
-                String fileID = UUID.randomUUID().toString();
                 DiffModel diffModel = new DiffModel();
                 diffModel.path = s;
                 diffModel.diff = Files.readString(file.toPath());
+                dirService.createCommitDiffFile(projectDir, commitModel.getUID(), commitModel.getBranchID(), diffModel);
 
-                File diffFile = new File(diffDir, fileID + ".kuflexDiff");
-                if (!diffFile.createNewFile()) {
-                    throw new Exception("Failed to create new commit file : " + s + ".kuflex");
-                }
-
-                try (FileWriter fileWriter = new FileWriter(diffFile)) {
-                    String data = gson.toJson(diffModel);
-                    fileWriter.write(data);
-                }
             }
 
 

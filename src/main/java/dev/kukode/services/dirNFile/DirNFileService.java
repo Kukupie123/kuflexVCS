@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 17/07/23, 6:29 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 17/07/23, 7:05 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -8,6 +8,7 @@
 package dev.kukode.services.dirNFile;
 
 import com.google.gson.Gson;
+import dev.kukode.models.DiffModel;
 import dev.kukode.models.KuflexRepoModel;
 import dev.kukode.models.SnapshotModel;
 import dev.kukode.models.branches.BranchDB;
@@ -20,6 +21,7 @@ import java.io.FileWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class DirNFileService {
@@ -156,6 +158,41 @@ public class DirNFileService {
         if (!commitDbFile.createNewFile()) {
             throw new Exception("Failed to create commit DB File");
         }
+    }
+
+    public void createCommitDiffDirectory(String projectDir, String commitID, String branchID) throws Exception {
+        File diffDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir);
+        if (!diffDir.mkdirs()) {
+            throw new Exception("Failed to create diff folder");
+        }
+    }
+
+    public void createCommitDiffFile(String projectDir, String commitID, String branchID, DiffModel diffModel) throws Exception {
+        //Create file
+        String fileID = UUID.randomUUID().toString();
+        File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir, fileID + ".json");
+        if (!file.createNewFile()) {
+            throw new Exception("Failed to create new diff file");
+        }
+
+        //write to file
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            String data = gson.toJson(diffModel);
+            fileWriter.write(data);
+        }
+    }
+
+    public File getCommitDiffFile(String projectDir, String commitID, String branchID, String diffModelID) throws Exception {
+        File diffDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir, diffModelID + ".json");
+        if (!diffDir.exists()) {
+            throw new Exception("Couldn't find diffID " + diffModelID + " for commit " + commitID + " for branch " + branchID);
+        }
+        return diffDir;
+    }
+
+    public DiffModel getCommitDiffModel(String projectDir, String commitID, String branchID, String diffModelID) throws Exception {
+        File file = getCommitDiffFile(projectDir, commitID, branchID, diffModelID);
+        return gson.fromJson(Files.readString(file.toPath()), DiffModel.class);
     }
 
     public File getCommitDbFileForBranch(String projectDir, String branchID) throws Exception {
