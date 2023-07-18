@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 17/07/23, 7:05 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 10:37 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -57,7 +57,6 @@
             //create the kuflex repository file
             dirService.createKuFlexRepoFile(projectDir, kuflexRepo);
 
-            //TODO: Cleanup create init branch and commit
             //Create initial branch
             logger.info("Initial Branch Creation");
             BranchModel defaultBranch = createInitialBranch(projectDir, "default");
@@ -86,7 +85,7 @@
             //Add new commit to commitDB of DB
             addCommitToDB(projectDir, kuflexRepo.activeBranch, newCommitModel);
             //Create project snapshot for new commit
-            //TODO: Change create snapshot function
+
             createSnapshot(projectDir, newCommitModel);
             //Determine which file has been removed from current branch for moving to vault. To do this we compare the snapshots
             List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit
@@ -203,7 +202,6 @@
             return snapshotModel;
         }
 
-        //TODO: Fix this function
         private void createInitialFileCopy(String projectDir, SnapshotModel snapshotModel, CommitModel commitModel) throws Exception {
             //Create diffs directory
             dirService.createCommitDiffDirectory(projectDir, commitModel.getUID(), commitModel.getBranchID());
