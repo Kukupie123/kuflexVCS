@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 18/07/23, 7:25 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 7:49 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -106,12 +106,14 @@
                     addedFiles.add(s);
                 }
             }
-            //Remove these paths from newSnap as these files's diffing process is going to be different. We only need to copy it's content
+            //Remove these paths from newSnap as the file's diffing process is going to be different. We only need to copy it's content
             newSnap.files.removeAll(addedFiles);
 
             //Now comes the hard part. File content Diff and then saving them in diff folder
             //Load diff files from currentCommit
-            //Load current file
+            List<DiffModel> diffModels = dirService.getAllDiffsOfCommit(projectDir, currentCommitModel.getUID(), currentCommitModel.getBranchID());
+            //Load the current file from project based on new snapshot
+            List<File> projectFiles = dirService.getProjectFileBasedOnSnapshot(projectDir, newSnap);
             //Compare diffs
             //Save it
 
