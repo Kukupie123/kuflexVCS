@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 18/07/23, 10:37 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 10:46 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -21,7 +21,6 @@
     import org.springframework.stereotype.Service;
 
     import java.io.File;
-    import java.io.FileWriter;
     import java.nio.file.DirectoryNotEmptyException;
     import java.nio.file.Files;
     import java.util.ArrayList;
@@ -75,64 +74,29 @@
         @Override
         public boolean createNewCommit(String projectDir, String commitName, String comment) throws Exception {
             var kuflexRepo = dirService.getKuFlexRepoModel(projectDir);
-            //Current commit
-            CommitModel currentCommitModel = getCommitByID(projectDir, kuflexRepo.activeCommit, kuflexRepo.activeBranch);
-
+            //Get Current commit
+            CommitModel currentCommitModel = dirService.getCommitByID(projectDir, kuflexRepo.activeCommit, kuflexRepo.activeBranch);
             //Create New commit
             CommitModel newCommitModel = new CommitModel(commitName, comment, new Date(), currentCommitModel.getBranchID(), currentCommitModel.getInheritedCommit());
             //Create New commit directory
-            createCommitDirectory(projectDir, newCommitModel.getBranchID(), newCommitModel.getUID());
+            dirService.createCommitDir(projectDir, newCommitModel.getBranchID(), newCommitModel.getUID());
             //Add new commit to commitDB of DB
-            addCommitToDB(projectDir, kuflexRepo.activeBranch, newCommitModel);
+            CommitDB commitDB = dirService.getCommitDbModelForBranch(projectDir, newCommitModel.getBranchID());
+            commitDB.commits.add(newCommitModel);
+            dirService.updateCommitDbForBranch(projectDir, newCommitModel.getBranchID(), commitDB);
             //Create project snapshot for new commit
-
             createSnapshot(projectDir, newCommitModel);
+            /*
+            We can't directly go for file diff yet because
+            What if the new snapshot has files that are no longer there?
+            What if the new snapshot has files that are new and doesn't exist in the previous snapshot?
+             */
             //Determine which file has been removed from current branch for moving to vault. To do this we compare the snapshots
+            //TODO: The comment above
             List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit
+            List<String> addedFiles = new ArrayList<>(); //These files do not exist in new commit
             //Now comes the hard part. File content Diff and then saving them in diff folder
             return false;
-        }
-
-        private void createCommitDirectory(String projectDir, String branchID, String commitID) throws Exception {
-            File file = new File(projectDir + "\\.kuflex\\branches\\" + branchID, commitID);
-            if (!file.mkdir()) {
-                throw new Exception("Failed to create Commit directory");
-            }
-        }
-
-        private void addCommitToDB(String projectDir, String branchID, CommitModel commitModel) throws Exception {
-            var commitDB = getCommitDB(projectDir, branchID);
-            commitDB.commits.add(commitModel);
-            updateCommitDB(projectDir, branchID, commitDB);
-        }
-
-        private void updateCommitDB(String projectDir, String branchID, CommitDB commitDB) throws Exception {
-            File file = new File(projectDir + "\\.kuflex\\branches\\" + branchID + "\\commitsDB.json");
-            if (!file.exists() || !file.isFile()) {
-                throw new Exception("CommitDB doesn't exist or is not a file");
-            }
-            try (FileWriter fileWriter = new FileWriter(file)) {
-                fileWriter.write(gson.toJson(commitDB));
-            }
-        }
-
-        private CommitDB getCommitDB(String projectDir, String branchID) throws Exception {
-            File file = new File(projectDir + "\\.kuflex\\branches\\" + branchID + "\\commitsDB.json");
-            if (!file.exists() || !file.isFile()) {
-                throw new Exception("CommitDB doesn't exist or is not a file");
-            }
-            String data = Files.readString(file.toPath());
-            return gson.fromJson(data, CommitDB.class);
-        }
-
-        private CommitModel getCommitByID(String projectDir, String commitID, String branchID) throws Exception {
-            CommitDB commitDB = getCommitDB(projectDir, branchID);
-            for (CommitModel commit : commitDB.commits) {
-                if (commit.getUID().equals(commitID)) {
-                    return commit;
-                }
-            }
-            return null;
         }
 
 

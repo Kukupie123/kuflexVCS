@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 18/07/23, 10:37 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 10:46 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -13,6 +13,7 @@ import dev.kukode.models.KuflexRepoModel;
 import dev.kukode.models.SnapshotModel;
 import dev.kukode.models.branches.BranchDB;
 import dev.kukode.models.commits.CommitDB;
+import dev.kukode.models.commits.CommitModel;
 import dev.kukode.util.ConstantNames;
 import org.springframework.stereotype.Service;
 
@@ -182,6 +183,16 @@ public class DirNFileService {
         }
     }
 
+    public CommitModel getCommitByID(String projectDir, String commitID, String branchID) throws Exception {
+        CommitDB commitDB = getCommitDbModelForBranch(projectDir, branchID);
+        for (CommitModel commit : commitDB.commits) {
+            if (commit.getUID().equals(commitID)) {
+                return commit;
+            }
+        }
+        return null;
+    }
+
     public File getCommitDiffFile(String projectDir, String commitID, String branchID, String diffModelID) throws Exception {
         File diffDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir, diffModelID + ".json");
         if (!diffDir.exists()) {
@@ -203,7 +214,7 @@ public class DirNFileService {
         return file;
     }
 
-    public CommitDB getCommitDbModel(String projectDir, String branchID) throws Exception {
+    public CommitDB getCommitDbModelForBranch(String projectDir, String branchID) throws Exception {
         File file = getCommitDbFileForBranch(projectDir, branchID);
         return gson.fromJson(Files.readString(file.toPath()), CommitDB.class);
     }
