@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 15/07/23, 7:18 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 8:41 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -32,15 +32,21 @@ public class MenuService {
         Scanner scanner = new Scanner(System.in);
         //noinspection InfiniteLoopStatement
         while (true) {
-            System.out.println("1. Initialize");
+            System.out.println("1. Initialize\n2. Commit");
             int choice = scanner.nextInt();
             switch (choice) {
                 case 1:
                     System.out.println("Type the name of the project");
                     String projectName = scanner.next();
-                    System.out.println("Type the name of the initial Branch");
                     Date createdDate = new Date();
                     repoService.initializeRepo(path, projectName, createdDate, "Random Creator");
+                    break;
+                case 2:
+                    System.out.println("Name of commit");
+                    String commitName = scanner.next();
+                    System.out.println("Comment");
+                    String comment = scanner.next();
+                    repoService.createNewCommit(path, commitName, comment);
                 default:
                     break;
             }

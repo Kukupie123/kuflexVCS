@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 18/07/23, 7:49 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 8:41 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -254,7 +254,7 @@ public class DirNFileService {
     }
 
     public File getCommitDiffFile(String projectDir, String commitID, String branchID, String diffModelID) throws Exception {
-        File diffDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir, diffModelID);
+        File diffDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir + "\\" + diffModelID);
         if (!diffDir.exists()) {
             throw new Exception("Couldn't find diffID " + diffModelID + " for commit " + commitID + " for branch " + branchID);
         }

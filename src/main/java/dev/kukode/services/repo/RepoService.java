@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 18/07/23, 8:19 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 8:41 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -16,6 +16,7 @@
     import dev.kukode.models.commits.CommitDB;
     import dev.kukode.models.commits.CommitModel;
     import dev.kukode.services.dirNFile.DirNFileService;
+    import difflib.Delta;
     import difflib.DiffUtils;
     import difflib.Patch;
     import org.slf4j.Logger;
@@ -70,7 +71,7 @@
             KuflexRepoModel kuflexRepoModel = dirService.getKuFlexRepoModel(projectDir);
             kuflexRepoModel.activeBranch = defaultBranch.getUID();
             kuflexRepoModel.activeCommit = defaultCommit.getUID();
-            kuflexRepoModel.initialBranch = defaultCommit.getUID();
+            kuflexRepoModel.initialBranch = defaultBranch.getUID();
             dirService.updateKuFlexRepo(projectDir, kuflexRepoModel);
         }
 
@@ -144,7 +145,45 @@
                 //Create patch
                 Patch<String> patch = DiffUtils.diff(diffContentTokens, projectFileContentTokens);
                 //Save patch as diff
+                StringBuilder diffFileContent = new StringBuilder();
+                for (Delta<String> data : patch.getDeltas()) {
+                    diffFileContent.append(data.toString());
+                    diffFileContent.append("\n");
+                }
+                diffModel.diff = diffContent;
+                dirService.createCommitDiffFile(projectDir, newCommitModel.getUID(), newCommitModel.getBranchID(), diffModel);
             }
+
+            /*
+            Example code of reading from patch
+            private static Patch<String> readPatchFromFile(String diffFilePath) throws IOException, PatchFormatException {
+        try (BufferedReader reader = new BufferedReader(new FileReader(diffFilePath))) {
+            List<String> diffLines = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                diffLines.add(line);
+            }
+
+            // Parse the patch from the diff lines
+            return DiffUtils.parseUnifiedDiff(diffLines);
+        }
+    }
+
+
+
+
+
+       // Read the patch file
+            Patch<String> patch = readPatchFromFile(diffFilePath);
+
+            // Apply the patch to the original text
+            List<String> modifiedLines = (List<String>) DiffUtils.patch(originalLines, patch);
+
+            // Convert the modified lines back to a single text
+            String modifiedText = String.join("\n", modifiedLines);
+
+            System.out.println("Modified text:\n" + modifiedText);
+             */
 
             return true;
         }
