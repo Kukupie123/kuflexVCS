@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 18/07/23, 9:08 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 10:07 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -30,6 +30,21 @@
     import java.util.Arrays;
     import java.util.Date;
     import java.util.List;
+    /*
+    TODO: Redesign the whole File diff storing algorithm
+    Here is my new design idea
+    Lets say our project has a file "file.txt"
+
+    File diff saves storage a lot BUT will take a lot of computation power as we will have to chain commits to reach a certain commit
+    Project snapshot/ State saving is nice, we are essentially saving a copy of the project for each commit and we can then load each commit super fast without any calculation
+    BUT it takes a lot of storage
+
+    So we will be combining them, once certain amount of file diff chain has been reached we can take a project snapshot
+
+    For now we will be using file-diff approach and perfect it.
+    Once perfected we will work on project snapshot
+    Then combine them both ultimately
+     */
 
     @Service
     public class RepoService implements IRepoService {
@@ -91,20 +106,18 @@
             dirService.updateCommitDbForBranch(projectDir, newCommitModel.getBranchID(), commitDB);
             //Create project snapshot for new commit
             SnapshotModel newSnap = createSnapshot(projectDir, newCommitModel);
-            /*
-            We can't directly go for file diff yet because
-            What if the new snapshot has files that are no longer there?
-            What if the new snapshot has files that are new and doesn't exist in the previous snapshot?
-             */
             //Determine which file has been removed from current branch for moving to vault. To do this we compare the snapshots
             SnapshotModel currentSnap = dirService.getCommitSnapshotModel(projectDir, currentCommitModel.getUID(), currentCommitModel.getBranchID());
-            List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit. I don't think we really need to do this but doing it just in case
+            List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit but are present in current commit so we need to move them to vault
             for (String s : currentSnap.files) {
                 if (!newSnap.files.contains(s)) {
                     System.out.println(s + " doesn't exist in new commit");
                     removedFiles.add(s);
                 }
             }
+            //TODO: Move the removed files to vault
+
+            //Determine which files are new to the commit, these files can simply have their contents copy and pasted
             List<String> addedFiles = new ArrayList<>(); //These files do not exist in new commit
             for (String s : newSnap.files) {
                 if (!currentSnap.files.contains(s)) {
@@ -116,7 +129,7 @@
             newSnap.files.removeAll(addedFiles);
             //Copy the added files to the diff directory as diff models, since they are new they do not have any previous file to compare with
             for (String s : addedFiles) {
-                //TODO
+                //TODO : Copy file content as diff file
             }
 
             //Now comes the hard part. File content Diff and then saving them in diff folder
@@ -126,19 +139,19 @@
             List<File> projectFiles = dirService.getProjectFileBasedOnSnapshot(projectDir, newSnap);
             //Iterate project files
             for (File f : projectFiles) {
-                //Find diffModel file that represents the file f
-                DiffModel diffModel = null;
+                //Find currentDiffModel file that represents the file f from currentCommit
+                DiffModel currentDiffModel = null;
                 String relativePath = f.getPath().replace(projectDir, "");
                 System.out.println(relativePath + "============");
                 for (DiffModel dm : diffModels) {
                     if (dm.path.equals(relativePath)) {
-                        diffModel = dm;
+                        currentDiffModel = dm;
                         break;
                     }
                 }
-                if (diffModel == null) throw new Exception("Failed to find diff model for file " + f.getPath());
-                //Load content from diffModel
-                String diffContent = diffModel.diff;
+                if (currentDiffModel == null) throw new Exception("Failed to find diff model for file " + f.getPath());
+                //Load content from currentDiffModel
+                String diffContent = currentDiffModel.diff;
                 System.out.println(diffContent);
                 //Tokenize the content
                 List<String> diffContentTokens = Arrays.asList(diffContent.split("\\n"));
@@ -151,12 +164,13 @@
                 Patch<String> patch = DiffUtils.diff(diffContentTokens, projectFileContentTokens);
                 //Save patch as diff
                 StringBuilder diffFileContent = new StringBuilder();
-                for (Delta<String> data : patch.getDeltas()) {
-                    diffFileContent.append(data.toString());
-                    diffFileContent.append("\n");
+                for (Delta<String> delta : patch.getDeltas()) {
+                    System.out.println(delta);
+                    diffFileContent.append(delta.toString()).append("\n\n");
                 }
-                diffModel.diff = diffContent;
-                dirService.createCommitDiffFile(projectDir, newCommitModel.getUID(), newCommitModel.getBranchID(), diffModel);
+                //We will reuse currentDiffModel as newDiffModel
+                currentDiffModel.diff = diffFileContent.toString();
+                dirService.createCommitDiffFile(projectDir, newCommitModel.getUID(), newCommitModel.getBranchID(), currentDiffModel);
             }
 
             //Update active branch and active commit

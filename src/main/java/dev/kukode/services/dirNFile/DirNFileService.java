@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 18/07/23, 8:53 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 10:07 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -255,6 +255,7 @@ public class DirNFileService {
         //write to file
         try (FileWriter fileWriter = new FileWriter(file)) {
             String data = gson.toJson(diffModel);
+            System.out.println("Diff model data :\n " + data + "\n-------------\n");
             fileWriter.write(data);
         }
     }
