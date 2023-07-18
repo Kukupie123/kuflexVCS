@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 18/07/23, 8:53 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 9:08 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -97,17 +97,18 @@
             What if the new snapshot has files that are new and doesn't exist in the previous snapshot?
              */
             //Determine which file has been removed from current branch for moving to vault. To do this we compare the snapshots
-            //TODO: The comment above
             SnapshotModel currentSnap = dirService.getCommitSnapshotModel(projectDir, currentCommitModel.getUID(), currentCommitModel.getBranchID());
             List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit. I don't think we really need to do this but doing it just in case
             for (String s : currentSnap.files) {
                 if (!newSnap.files.contains(s)) {
+                    System.out.println(s + " doesn't exist in new commit");
                     removedFiles.add(s);
                 }
             }
             List<String> addedFiles = new ArrayList<>(); //These files do not exist in new commit
             for (String s : newSnap.files) {
                 if (!currentSnap.files.contains(s)) {
+                    System.out.println(s + " is new. Not found in previous commit");
                     addedFiles.add(s);
                 }
             }
@@ -115,7 +116,7 @@
             newSnap.files.removeAll(addedFiles);
             //Copy the added files to the diff directory as diff models, since they are new they do not have any previous file to compare with
             for (String s : addedFiles) {
-
+                //TODO
             }
 
             //Now comes the hard part. File content Diff and then saving them in diff folder
@@ -135,12 +136,15 @@
                         break;
                     }
                 }
+                if (diffModel == null) throw new Exception("Failed to find diff model for file " + f.getPath());
                 //Load content from diffModel
                 String diffContent = diffModel.diff;
+                System.out.println(diffContent);
                 //Tokenize the content
                 List<String> diffContentTokens = Arrays.asList(diffContent.split("\\n"));
                 //Load content from file f
                 String projectFileContent = Files.readString(f.toPath());
+                System.out.println(projectFileContent);
                 //Tokenize the content
                 List<String> projectFileContentTokens = Arrays.asList(projectFileContent.split("\\n"));
                 //Create patch
