@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 18/07/23, 10:46 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 7:01 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -85,7 +85,7 @@
             commitDB.commits.add(newCommitModel);
             dirService.updateCommitDbForBranch(projectDir, newCommitModel.getBranchID(), commitDB);
             //Create project snapshot for new commit
-            createSnapshot(projectDir, newCommitModel);
+            SnapshotModel newSnap = createSnapshot(projectDir, newCommitModel);
             /*
             We can't directly go for file diff yet because
             What if the new snapshot has files that are no longer there?
@@ -93,8 +93,21 @@
              */
             //Determine which file has been removed from current branch for moving to vault. To do this we compare the snapshots
             //TODO: The comment above
-            List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit
+            SnapshotModel currentSnap = dirService.getCommitSnapshotModel(projectDir, currentCommitModel.getUID(), currentCommitModel.getBranchID());
+            List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit. I don't think we really need to do this but doing it just in case
+            for (String s : currentSnap.files) {
+                if (!newSnap.files.contains(s)) {
+                    removedFiles.add(s);
+                }
+            }
             List<String> addedFiles = new ArrayList<>(); //These files do not exist in new commit
+            for (String s : newSnap.files) {
+                if (!currentSnap.files.contains(s)) {
+                    addedFiles.add(s);
+                }
+            }
+            //Remove these paths from newSnap as these files's diffing process is going to be different. We only need to copy it's content
+            newSnap.files.removeAll(addedFiles);
             //Now comes the hard part. File content Diff and then saving them in diff folder
             return false;
         }
