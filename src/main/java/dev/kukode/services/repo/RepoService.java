@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 18/07/23, 7:50 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 8:19 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -16,6 +16,8 @@
     import dev.kukode.models.commits.CommitDB;
     import dev.kukode.models.commits.CommitModel;
     import dev.kukode.services.dirNFile.DirNFileService;
+    import difflib.DiffUtils;
+    import difflib.Patch;
     import org.slf4j.Logger;
     import org.slf4j.LoggerFactory;
     import org.springframework.stereotype.Service;
@@ -24,6 +26,7 @@
     import java.nio.file.DirectoryNotEmptyException;
     import java.nio.file.Files;
     import java.util.ArrayList;
+    import java.util.Arrays;
     import java.util.Date;
     import java.util.List;
 
@@ -108,16 +111,42 @@
             }
             //Remove these paths from newSnap as the file's diffing process is going to be different. We only need to copy it's content
             newSnap.files.removeAll(addedFiles);
+            //Copy the added files to the diff directory as diff models, since they are new they do not have any previous file to compare with
+            for (String s : addedFiles) {
+
+            }
 
             //Now comes the hard part. File content Diff and then saving them in diff folder
             //Load diff files from currentCommit
             List<DiffModel> diffModels = dirService.getAllDiffsOfCommit(projectDir, currentCommitModel.getUID(), currentCommitModel.getBranchID());
             //Load the current file from a project based on new snapshot
             List<File> projectFiles = dirService.getProjectFileBasedOnSnapshot(projectDir, newSnap);
-            //Compare diffs, compare content from diffModel with projectFiles
-            //Save the diff as diff files for new commit
+            //Iterate project files
+            for (File f : projectFiles) {
+                //Find diffModel file that represents the file f
+                DiffModel diffModel = null;
+                String relativePath = f.getPath().replace(projectDir, "");
+                System.out.println(relativePath + "============");
+                for (DiffModel dm : diffModels) {
+                    if (dm.path.equals(relativePath)) {
+                        diffModel = dm;
+                        break;
+                    }
+                }
+                //Load content from diffModel
+                String diffContent = diffModel.diff;
+                //Tokenize the content
+                List<String> diffContentTokens = Arrays.asList(diffContent.split("\\n"));
+                //Load content from file f
+                String projectFileContent = Files.readString(f.toPath());
+                //Tokenize the content
+                List<String> projectFileContentTokens = Arrays.asList(projectFileContent.split("\\n"));
+                //Create patch
+                Patch<String> patch = DiffUtils.diff(diffContentTokens, projectFileContentTokens);
+                //Save patch as diff
+            }
 
-            return false;
+            return true;
         }
 
 
