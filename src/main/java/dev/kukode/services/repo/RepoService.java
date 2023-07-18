@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 18/07/23, 7:49 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 7:50 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -112,10 +112,10 @@
             //Now comes the hard part. File content Diff and then saving them in diff folder
             //Load diff files from currentCommit
             List<DiffModel> diffModels = dirService.getAllDiffsOfCommit(projectDir, currentCommitModel.getUID(), currentCommitModel.getBranchID());
-            //Load the current file from project based on new snapshot
+            //Load the current file from a project based on new snapshot
             List<File> projectFiles = dirService.getProjectFileBasedOnSnapshot(projectDir, newSnap);
-            //Compare diffs
-            //Save it
+            //Compare diffs, compare content from diffModel with projectFiles
+            //Save the diff as diff files for new commit
 
             return false;
         }
