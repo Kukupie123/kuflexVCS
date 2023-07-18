@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 18/07/23, 8:41 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 8:53 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -239,9 +239,15 @@ public class DirNFileService {
     }
 
     public void createCommitDiffFile(String projectDir, String commitID, String branchID, DiffModel diffModel) throws Exception {
+        //Check if diffs folder exist, if not create one
+        String diffDirPath = projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir;
+        File diffDir = new File(diffDirPath);
+        if (!diffDir.exists()) {
+            diffDir.mkdirs();
+        }
         //Create file
         String fileID = UUID.randomUUID().toString();
-        File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir, fileID + ".json");
+        File file = new File(diffDirPath, fileID + ".json");
         if (!file.createNewFile()) {
             throw new Exception("Failed to create new diff file");
         }
@@ -254,7 +260,7 @@ public class DirNFileService {
     }
 
     public File getCommitDiffFile(String projectDir, String commitID, String branchID, String diffModelID) throws Exception {
-        File diffDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir + "\\" + diffModelID);
+        File diffDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir + "\\" + diffModelID);
         if (!diffDir.exists()) {
             throw new Exception("Couldn't find diffID " + diffModelID + " for commit " + commitID + " for branch " + branchID);
         }

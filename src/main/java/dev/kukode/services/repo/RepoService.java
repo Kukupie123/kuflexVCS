@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 18/07/23, 8:41 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 18/07/23, 8:53 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -72,6 +72,7 @@
             kuflexRepoModel.activeBranch = defaultBranch.getUID();
             kuflexRepoModel.activeCommit = defaultCommit.getUID();
             kuflexRepoModel.initialBranch = defaultBranch.getUID();
+            kuflexRepoModel.initialCommit = defaultCommit.getUID();
             dirService.updateKuFlexRepo(projectDir, kuflexRepoModel);
         }
 
@@ -154,6 +155,12 @@
                 dirService.createCommitDiffFile(projectDir, newCommitModel.getUID(), newCommitModel.getBranchID(), diffModel);
             }
 
+            //Update active branch and active commit
+            var repo = dirService.getKuFlexRepoModel(projectDir);
+            repo.activeBranch = newCommitModel.getBranchID();
+            repo.activeCommit = newCommitModel.getUID();
+            dirService.updateKuFlexRepo(projectDir, repo);
+
             /*
             Example code of reading from patch
             private static Patch<String> readPatchFromFile(String diffFilePath) throws IOException, PatchFormatException {
@@ -214,7 +221,6 @@
             CommitModel commitModel = new CommitModel(commitName, commitComment, new Date(), branchID, "");
             //Create commit directory
             dirService.createCommitDir(projectDir, branchID, commitModel.getUID());
-            String commitPath = projectDir + "\\.kuflex\\branches\\" + branchID + "\\" + commitModel.getUID(); //remove in future
             //Create CommitDB file
             dirService.createCommitDBFileForBranch(projectDir, branchID);
             //Write the new commit to commitDBFile file
