@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 19/07/23, 7:13 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 19/07/23, 8:00 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -34,6 +34,10 @@ public class DirNFileService {
     }
 
     //GENERAL*************
+
+    /**
+     * Returns a list of file path relative to the directory of the project
+     */
     public List<String> getProjectFilesPath(String projectDir) {
         String basePath = "";
         return getProjectFilesPath(projectDir, basePath);
@@ -59,6 +63,12 @@ public class DirNFileService {
         return filePaths;
     }
 
+    /**
+     * Returns a list of file that is in snapshotModel.Files
+     *
+     * @param projectDir    Root directory of the project
+     * @param snapshotModel The snapshot to load the files from
+     */
     public List<File> getProjectFileBasedOnSnapshot(String projectDir, SnapshotModel snapshotModel) {
         List<File> files = new ArrayList<>();
         for (String s : snapshotModel.files) {
@@ -71,6 +81,12 @@ public class DirNFileService {
     }
 
     //REPOSITORY***********************
+
+    /**
+     * Create a new repository directory at the root of the project
+     *
+     * @param projectDir Root directory of the project
+     */
     public void createKuFlexRepoDir(String projectDir) throws Exception {
         File rootDir = new File(projectDir);
         if (!rootDir.isDirectory()) {
@@ -82,6 +98,11 @@ public class DirNFileService {
         }
     }
 
+    /**
+     * Create the repository file inside the repository directory
+     *
+     * @param kuflexRepoModel KuFlexRepo model to write to the file
+     */
     public void createKuFlexRepoFile(String projectDir, KuflexRepoModel kuflexRepoModel) throws Exception {
         File kuFlexRepoFile = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPOFILE);
         if (!kuFlexRepoFile.createNewFile()) {
@@ -93,6 +114,9 @@ public class DirNFileService {
         }
     }
 
+    /**
+     * Get KuFlexRepo file as a File object
+     */
     public File getKuFlexRepoFile(String projectDir) throws Exception {
         File file = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPOFILE);
         if (!file.isFile()) {
@@ -101,11 +125,19 @@ public class DirNFileService {
         return file;
     }
 
+    /**
+     * Get KuFlexRepo file as KuFlexRepoModel
+     */
     public KuflexRepoModel getKuFlexRepoModel(String projectDir) throws Exception {
         File file = getKuFlexRepoFile(projectDir);
         return gson.fromJson(Files.readString(file.toPath()), KuflexRepoModel.class);
     }
 
+    /**
+     * Update KuFlexRepo with new KuFlexRepo object
+     *
+     * @param kuflexRepoModel Updated KuFlexRepo object
+     */
     public boolean updateKuFlexRepo(String projectDir, KuflexRepoModel kuflexRepoModel) throws Exception {
         File repoFile = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.KUFLEXREPOFILE);
         if (!repoFile.exists() || !repoFile.isFile()) {
@@ -119,6 +151,10 @@ public class DirNFileService {
     }
 
     //BRANCH*****************
+
+    /**
+     * Create new Branch directory inside repository directory
+     */
     public void createBranchDirectory(String projectDir, String branchID) throws Exception {
         File branchDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID);
         if (!branchDir.mkdirs()) {
@@ -126,6 +162,9 @@ public class DirNFileService {
         }
     }
 
+    /**
+     * Create BranchDB file inside Repository Directory that is going to hold all branches.
+     */
     public void createBranchDBFile(String projectDir) throws Exception {
         File branchDBFile = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.BranchesDBFILE);
         if (branchDBFile.exists()) {
@@ -136,6 +175,9 @@ public class DirNFileService {
         }
     }
 
+    /**
+     * Get branchDB database as a File object
+     */
     public File getBranchDbFile(String projectDir) throws Exception {
         File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.BranchesDBFILE);
         if (!file.isFile()) {
@@ -144,11 +186,19 @@ public class DirNFileService {
         return file;
     }
 
+    /**
+     * Get branchDB database as a BranchDBModel
+     */
     public BranchDB getBranchDbModel(String projectDir) throws Exception {
         File file = getBranchDbFile(projectDir);
         return gson.fromJson(Files.readString(file.toPath()), BranchDB.class);
     }
 
+    /**
+     * Update BranchDbFile
+     *
+     * @param branchDB Updated branchDB
+     */
     public void updateBranchDbFile(String projectDir, BranchDB branchDB) throws Exception {
         File branchDbFile = getBranchDbFile(projectDir);
         String data = gson.toJson(branchDB);
@@ -158,6 +208,13 @@ public class DirNFileService {
     }
 
     //COMMIT**************
+
+    /**
+     * Create Commit Directory
+     *
+     * @param branchID BranchID where we are going to create the CommitDir
+     * @param commitID The CommitID of the commit. The commitDir will be named after the commitID
+     */
     public void createCommitDir(String projectDir, String branchID, String commitID) throws Exception {
         File commitDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID);
         if (!commitDir.mkdirs()) {
@@ -165,6 +222,11 @@ public class DirNFileService {
         }
     }
 
+    /**
+     * Create CommitDB file for the given bran
+     *
+     * @param branchID BranchID where we are going to create commitDB file
+     */
     public void createCommitDBFileForBranch(String projectDir, String branchID) throws Exception {
         String filePath = projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + ConstantNames.CommitsDBFile;
         File commitDbFile = new File(filePath);
@@ -173,7 +235,12 @@ public class DirNFileService {
         }
     }
 
-
+    /**
+     * Get CommitModel based on IDs
+     *
+     * @param commitID ID of the commit
+     * @param branchID ID of the branch to which the commit belongs to
+     */
     public CommitModel getCommitByID(String projectDir, String commitID, String branchID) throws Exception {
         CommitDB commitDB = getCommitDbModelForBranch(projectDir, branchID);
         for (CommitModel commit : commitDB.commits) {
@@ -184,7 +251,11 @@ public class DirNFileService {
         return null;
     }
 
-
+    /**
+     * Get CommitDB file for a branch
+     *
+     * @param branchID ID of the branch
+     */
     public File getCommitDbFileForBranch(String projectDir, String branchID) throws Exception {
         File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + ConstantNames.CommitsDBFile);
         if (!file.isFile()) {
@@ -193,11 +264,22 @@ public class DirNFileService {
         return file;
     }
 
+    /**
+     * Get CommitDBModel for a branch
+     *
+     * @param branchID ID of the branch
+     */
     public CommitDB getCommitDbModelForBranch(String projectDir, String branchID) throws Exception {
         File file = getCommitDbFileForBranch(projectDir, branchID);
         return gson.fromJson(Files.readString(file.toPath()), CommitDB.class);
     }
 
+    /**
+     * Update CommitDB for a branch
+     *
+     * @param branchID ID of the branch
+     * @param commitDB Updated CommitDB
+     */
     public void updateCommitDbForBranch(String projectDir, String branchID, CommitDB commitDB) throws Exception {
         File commitDbFile = getCommitDbFileForBranch(projectDir, branchID);
         String data = gson.toJson(commitDB);
@@ -207,6 +289,13 @@ public class DirNFileService {
     }
 
     //SNAPSHOT*************
+
+    /**
+     * Create a new snapshot file for a commit
+     *
+     * @param commitID ID of the commit
+     * @param branchID ID of the branch to which the commit belongs to
+     */
     public void createCommitSnapshotFile(String projectDir, String commitID, String branchID) throws Exception {
         var snapFile = getCommitSnapshotFile(projectDir, commitID, branchID);
         if (!snapFile.createNewFile()) {
@@ -214,15 +303,34 @@ public class DirNFileService {
         }
     }
 
+    /**
+     * Get CommitSnapshot as a file of a Commit
+     *
+     * @param commitID ID of the commit
+     * @param branchID ID of the branch that the commit belongs to
+     */
     public File getCommitSnapshotFile(String projectDir, String commitID, String branchID) {
         return new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID, ConstantNames.SNAPSHOTFILE);
     }
 
+    /**
+     * Get CommitSnapshot object of a commit
+     *
+     * @param commitID ID of the commit
+     * @param branchID ID of the branch that the commit belongs to
+     */
     public SnapshotModel getCommitSnapshotModel(String projectDir, String commitID, String branchID) throws Exception {
         File file = getCommitSnapshotFile(projectDir, commitID, branchID);
         return gson.fromJson(Files.readString(file.toPath()), SnapshotModel.class);
     }
 
+    /**
+     * Update CommitSnapshot. Be careful with this. As a snapshot file should only be updated once, not following the rule may result in weird behaviors
+     *
+     * @param commitID      ID of the Commit
+     * @param branchID      ID of the branch that the commit belongs to
+     * @param snapshotModel Updated Snapshot model
+     */
     public void updateCommitSnapshot(String projectDir, String commitID, String branchID, SnapshotModel snapshotModel) throws Exception {
         var file = getCommitSnapshotFile(projectDir, commitID, branchID);
         try (FileWriter fileWriter = new FileWriter(file)) {
@@ -231,6 +339,13 @@ public class DirNFileService {
     }
 
     //DIFF******
+
+    /**
+     * Create a Diff directory inside a commit directory
+     *
+     * @param commitID ID of the commit
+     * @param branchID ID of the branch the commit belongs to
+     */
     public void createCommitDiffDirectory(String projectDir, String commitID, String branchID) throws Exception {
         File diffDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir);
         if (!diffDir.mkdirs()) {
@@ -238,6 +353,13 @@ public class DirNFileService {
         }
     }
 
+    /**
+     * Create Diff file inside diff directory
+     *
+     * @param commitID  ID of the Commit
+     * @param branchID  ID of the branch the commit belongs to
+     * @param diffModel DiffModel that is going to be written in the created Diff file
+     */
     public void createCommitDiffFile(String projectDir, String commitID, String branchID, DiffModel diffModel) throws Exception {
         //Check if the diffs folder exists, if not create one
         String diffDirPath = projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir;
@@ -260,6 +382,14 @@ public class DirNFileService {
         }
     }
 
+    /**
+     * get CommitDiff file based on diffID as a File object
+     *
+     * @param commitID    ID of the commit
+     * @param branchID    ID of the branch the Commit belongs to
+     * @param diffModelID ID of the diff
+     * @throws Exception
+     */
     public File getCommitDiffFile(String projectDir, String commitID, String branchID, String diffModelID) throws Exception {
         File diffDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir + "\\" + diffModelID);
         if (!diffDir.exists()) {
@@ -268,11 +398,25 @@ public class DirNFileService {
         return diffDir;
     }
 
+    /**
+     * get CommitDiff file based on diffID as a DiffModel object
+     *
+     * @param commitID    ID of the commit
+     * @param branchID    ID of the branch the Commit belongs to
+     * @param diffModelID ID of the diff
+     * @throws Exception
+     */
     public DiffModel getCommitDiffModel(String projectDir, String commitID, String branchID, String diffModelID) throws Exception {
         File file = getCommitDiffFile(projectDir, commitID, branchID, diffModelID);
         return gson.fromJson(Files.readString(file.toPath()), DiffModel.class);
     }
 
+    /**
+     * Get List of Diff models of a Commit by using commitID
+     *
+     * @param commitID ID of the commit
+     * @param branchID ID of the branch the commit belongs to
+     */
     public List<DiffModel> getAllDiffsOfCommit(String projectDir, String commitID, String branchID) throws Exception {
         List<DiffModel> diffModels = new ArrayList<>();
         File diffDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir);

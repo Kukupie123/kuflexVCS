@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 19/07/23, 7:13 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 19/07/23, 8:00 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -190,17 +190,11 @@
             while ((line = reader.readLine()) != null) {
                 diffLines.add(line);
             }
-
             // Parse the patch from the diff lines
             return DiffUtils.parseUnifiedDiff(diffLines);
         }
     }
-
-
-
-
-
-       // Read the patch file
+            // Read the patch file
             Patch<String> patch = readPatchFromFile(diffFilePath);
 
             // Apply the patch to the original text
@@ -211,10 +205,19 @@
 
             System.out.println("Modified text:\n" + modifiedText);
              */
-
             return true;
         }
 
+        @Override
+        public void loadCommit(String projectDir, String commitID, String branchID) {
+            /*
+            1. Make a Linked-List that is going to link initialBranch to the commit we want to load
+            2. We can do this by traversing down from the commit we need to load to the initial commit
+            3. Load file diffs sequentially from initial to final commit
+            4. On the way we will come across files that are present in old commit but not in new commit, we move those in vault
+            5. On the way we will come across files that are not present in old commit but present in new commit, we just read their diffs content and load the file
+             */
+        }
 
         private boolean doesRepoAlreadyExist(String projectDir) {
             File repoDir = new File(projectDir + "\\.kuflex");
