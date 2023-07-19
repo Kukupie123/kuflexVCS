@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 18/07/23, 10:07 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 19/07/23, 7:13 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -16,6 +16,7 @@
     import dev.kukode.models.commits.CommitDB;
     import dev.kukode.models.commits.CommitModel;
     import dev.kukode.services.dirNFile.DirNFileService;
+    import dev.kukode.util.ConstantNames;
     import difflib.Delta;
     import difflib.DiffUtils;
     import difflib.Patch;
@@ -60,12 +61,12 @@
 
         @Override
         public void initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception {
-            //Check if KuFlex repo already exist
+            //Check if KuFlex repo already exists
             if (doesRepoAlreadyExist(projectDir)) {
                 throw new DirectoryNotEmptyException("KuFlex Repository already exists");
             }
 
-            //Create kuflexrepo model
+            //Create a kuflexrepo model
             logger.info("Creating Repository folder with projectName : " + projectName);
             KuflexRepoModel kuflexRepo = new KuflexRepoModel(projectName, creator, creationDate);
 
@@ -105,8 +106,9 @@
             commitDB.commits.add(newCommitModel);
             dirService.updateCommitDbForBranch(projectDir, newCommitModel.getBranchID(), commitDB);
             //Create project snapshot for new commit
-            SnapshotModel newSnap = createSnapshot(projectDir, newCommitModel);
-            //Determine which file has been removed from current branch for moving to vault. To do this we compare the snapshots
+            SnapshotModel newSnap = setupSnapshot(projectDir, newCommitModel);
+            //Determine which file has been removed from the current branch for moving to vault.
+            // To do this we compare the snapshots
             SnapshotModel currentSnap = dirService.getCommitSnapshotModel(projectDir, currentCommitModel.getUID(), currentCommitModel.getBranchID());
             List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit but are present in current commit so we need to move them to vault
             for (String s : currentSnap.files) {
@@ -248,23 +250,23 @@
             dirService.updateCommitDbForBranch(projectDir, branchID, commitDB);
 
             //Create snapshot file for the commit
-            SnapshotModel snapshotModel = createSnapshot(projectDir, commitModel);
+            SnapshotModel snapshotModel = setupSnapshot(projectDir, commitModel);
             //Create Initial File copy
             createInitialFileCopy(projectDir, snapshotModel, commitModel);
 
             return commitModel;
         }
 
-        private SnapshotModel createSnapshot(String projectDir, CommitModel commitModel) throws Exception {
-            //Create snapshot file in commit path
-            dirService.createCommitSnapshot(projectDir, commitModel.getUID(), commitModel.getBranchID());
+        private SnapshotModel setupSnapshot(String projectDir, CommitModel commitModel) throws Exception {
+            //Create snapshot file in a commit path
+            dirService.createCommitSnapshotFile(projectDir, commitModel.getUID(), commitModel.getBranchID());
 
             //Get file paths
             List<String> filePaths = dirService.getProjectFilesPath(projectDir);
             //Remove file paths that are part of kuFlex
             List<String> pathToRemove = new ArrayList<>();
             for (String path : filePaths) {
-                if (path.contains(".kuflex")) {
+                if (path.contains(ConstantNames.KUFLEX)) {
                     pathToRemove.add(path);
                 }
             }
@@ -274,7 +276,7 @@
             SnapshotModel snapshotModel = new SnapshotModel();
             snapshotModel.files = filePaths;
 
-            //Write file path to snapshot
+            //Write a file path to snapshot
             dirService.updateCommitSnapshot(projectDir, commitModel.getUID(), commitModel.getBranchID(), snapshotModel);
             return snapshotModel;
         }

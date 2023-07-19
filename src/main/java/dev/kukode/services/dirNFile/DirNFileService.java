@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 18/07/23, 10:07 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 19/07/23, 7:13 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -207,7 +207,7 @@ public class DirNFileService {
     }
 
     //SNAPSHOT*************
-    public void createCommitSnapshot(String projectDir, String commitID, String branchID) throws Exception {
+    public void createCommitSnapshotFile(String projectDir, String commitID, String branchID) throws Exception {
         var snapFile = getCommitSnapshotFile(projectDir, commitID, branchID);
         if (!snapFile.createNewFile()) {
             throw new Exception("Failed to create snapshot for commitID : " + commitID + ", branchID : " + branchID);
@@ -239,7 +239,7 @@ public class DirNFileService {
     }
 
     public void createCommitDiffFile(String projectDir, String commitID, String branchID, DiffModel diffModel) throws Exception {
-        //Check if diffs folder exist, if not create one
+        //Check if the diffs folder exists, if not create one
         String diffDirPath = projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID + "\\" + ConstantNames.DiffDir;
         File diffDir = new File(diffDirPath);
         if (!diffDir.exists()) {
