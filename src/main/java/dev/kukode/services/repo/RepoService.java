@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 24/07/23, 11:15 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 24/07/23, 11:49 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -104,19 +104,8 @@
             dirService.updateCommitDbForBranch(projectDir, newCommitModel.getBranchID(), commitDB);
             //Create project snapshot for new commit
             SnapshotModel newSnap = setupSnapshot(projectDir, newCommitModel);
-            //Determine which file has been removed from the current branch for moving to vault.
-            // To do this we compare the snapshots
             SnapshotModel currentSnap = dirService.getCommitSnapshotModel(projectDir, currentCommitModel.getUID(), currentCommitModel.getBranchID());
-            List<String> removedFiles = new ArrayList<>(); //These files do not exist in new commit but are present in current commit so we need to move them to vault
-            for (String s : currentSnap.files) {
-                if (!newSnap.files.contains(s)) {
-                    System.out.println(s + " doesn't exist in new commit");
-                    removedFiles.add(s);
-                }
-            }
-            //TODO: Move the removed files to vault
-
-            //Determine which files are new to the commit, these files can simply have their contents copy and pasted
+            //Determine which files are new to the commit, these files can simply have their content copy and pasted
             List<String> addedFiles = new ArrayList<>(); //These files do not exist in new commit
             for (String s : newSnap.files) {
                 if (!currentSnap.files.contains(s)) {
@@ -128,15 +117,17 @@
             newSnap.files.removeAll(addedFiles);
             //Copy the added files to the diff directory as diff models, since they are new they do not have any previous file to compare with
             for (String s : addedFiles) {
-                //TODO : Copy file content as diff file
+                DiffModel diffModel = new DiffModel();
+                diffModel.path = s;
+                diffModel.diff = Files.readString(new File(projectDir + s).toPath());
+                dirService.createCommitDiffFile(projectDir, newCommitModel.getUID(), newCommitModel.getBranchID(), diffModel);
             }
 
-            //Now comes the hard part. File content Diff and then saving them in diff folder
             //Load diff files from currentCommit
             List<DiffModel> diffModels = dirService.getAllDiffsOfCommit(projectDir, currentCommitModel.getUID(), currentCommitModel.getBranchID());
             //Load the current file from a project based on new snapshot
             List<File> projectFiles = dirService.getProjectFileBasedOnSnapshot(projectDir, newSnap);
-            //Iterate project files
+            //Iterate project files to find the DiffModel from the list of DiffModels
             for (File f : projectFiles) {
                 //Find currentDiffModel file that represents the file f from currentCommit
                 DiffModel currentDiffModel = null;
