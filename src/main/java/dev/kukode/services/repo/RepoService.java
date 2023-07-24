@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 24/07/23, 11:58 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 24/07/23, 12:07 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -104,7 +104,10 @@
             commitDB.commits.add(newCommitModel);
             dirService.updateCommitDbForBranch(projectDir, newCommitModel.getBranchID(), commitDB);
             //Create project snapshot for new commit
-            SnapshotModel newSnap = setupSnapshot(projectDir, newCommitModel);
+            dirService.createCommitSnapshotFile(projectDir, newCommitModel.getUID(), newCommitModel.getBranchID());
+            SnapshotModel newSnap = createSnapshotModel(projectDir, newCommitModel);
+            dirService.updateCommitSnapshot(projectDir, newCommitModel.getUID(), newCommitModel.getBranchID(), newSnap);
+
             SnapshotModel currentSnap = dirService.getCommitSnapshotModel(projectDir, currentCommitModel.getUID(), currentCommitModel.getBranchID());
             //Determine which files are new to the commit, these files can simply have their content copy and pasted
             List<String> addedFiles = new ArrayList<>(); //These files do not exist in new commit
@@ -205,7 +208,8 @@
 
             //TODO
             // Iterate the chain from initial all the way to currentCommit,
-            //Load file diffs & check file deletion and addition and use vault directory accordingly
+            // Load file diffs & check file deletion and addition and use vault directory accordingly
+
 
         }
 
@@ -293,7 +297,7 @@
         }
 
         private CommitModel createInitialCommit(String projectDir, String commitName, String commitComment, String branchID) throws Exception {
-            //Create commit model
+            //Create a commit model
             CommitModel commitModel = new CommitModel(commitName, commitComment, new Date(), branchID, null, null);
             //Create commit directory
             dirService.createCommitDir(projectDir, branchID, commitModel.getUID());
@@ -306,16 +310,17 @@
             dirService.updateCommitDbForBranch(projectDir, branchID, commitDB);
 
             //Create snapshot file for the commit
-            SnapshotModel snapshotModel = setupSnapshot(projectDir, commitModel);
+            dirService.createCommitSnapshotFile(projectDir, commitModel.getUID(), commitModel.getBranchID());
+            SnapshotModel snapshotModel = createSnapshotModel(projectDir, commitModel);
+            //Write a file path to snapshot
+            dirService.updateCommitSnapshot(projectDir, commitModel.getUID(), commitModel.getBranchID(), snapshotModel);
             //Create Initial File copy
             createInitialFileCopy(projectDir, snapshotModel, commitModel);
 
             return commitModel;
         }
 
-        private SnapshotModel setupSnapshot(String projectDir, CommitModel commitModel) throws Exception {
-            //Create snapshot file in a commit path
-            dirService.createCommitSnapshotFile(projectDir, commitModel.getUID(), commitModel.getBranchID());
+        private SnapshotModel createSnapshotModel(String projectDir, CommitModel commitModel) throws Exception {
 
             //Get file paths
             List<String> filePaths = dirService.getProjectFilesPath(projectDir);
@@ -331,9 +336,6 @@
             //Create SnapShotModel and set its values
             SnapshotModel snapshotModel = new SnapshotModel();
             snapshotModel.files = filePaths;
-
-            //Write a file path to snapshot
-            dirService.updateCommitSnapshot(projectDir, commitModel.getUID(), commitModel.getBranchID(), snapshotModel);
             return snapshotModel;
         }
 
