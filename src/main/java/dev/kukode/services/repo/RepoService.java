@@ -226,7 +226,7 @@
             //Tokenize the content
             List<String> projectFileContentTokens = Arrays.asList(projectFileContent.split("\\n"));
             //Create patch
-            Patch<String> patch = DiffUtils.diff(projectFileContentTokens, diffContentTokens);
+            Patch<String> patch = DiffUtils.diff(diffContentTokens, projectFileContentTokens);
             //Save patch as diff
             StringBuilder diffFileContent = new StringBuilder();
             for (Delta<String> delta : patch.getDeltas()) {
