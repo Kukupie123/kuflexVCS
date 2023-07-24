@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 24/07/23, 11:49 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 24/07/23, 11:58 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -27,6 +27,7 @@
     import java.io.File;
     import java.nio.file.DirectoryNotEmptyException;
     import java.nio.file.Files;
+    import java.nio.file.Path;
     import java.util.*;
     /*
     TODO: Redesign the whole File diff storing algorithm
@@ -139,28 +140,8 @@
                         break;
                     }
                 }
-                if (currentDiffModel == null) throw new Exception("Failed to find diff model for file " + f.getPath());
-                //Load content from currentDiffModel
-                String diffContent = currentDiffModel.diff;
-                System.out.println(diffContent);
-                //Tokenize the content
-                List<String> diffContentTokens = Arrays.asList(diffContent.split("\\n"));
-                //Load content from file f
-                String projectFileContent = Files.readString(f.toPath());
-                System.out.println(projectFileContent);
-                //Tokenize the content
-                List<String> projectFileContentTokens = Arrays.asList(projectFileContent.split("\\n"));
-                //Create patch
-                Patch<String> patch = DiffUtils.diff(diffContentTokens, projectFileContentTokens);
-                //Save patch as diff
-                StringBuilder diffFileContent = new StringBuilder();
-                for (Delta<String> delta : patch.getDeltas()) {
-                    System.out.println(delta);
-                    diffFileContent.append(delta.toString()).append("\n\n");
-                }
-                //We will reuse currentDiffModel as newDiffModel
-                currentDiffModel.diff = diffFileContent.toString();
-                dirService.createCommitDiffFile(projectDir, newCommitModel.getUID(), newCommitModel.getBranchID(), currentDiffModel);
+                //Create diff file
+                createDiffFile(projectDir, currentDiffModel, newCommitModel, f.getPath());
             }
 
             //Update active branch and active commit
@@ -226,6 +207,31 @@
             // Iterate the chain from initial all the way to currentCommit,
             //Load file diffs & check file deletion and addition and use vault directory accordingly
 
+        }
+
+        private void createDiffFile(String projectDir, DiffModel diffModel, CommitModel commitModel, String projectFilePath) throws Exception {
+            if (diffModel == null) throw new Exception("Failed to find diff model for file " + projectFilePath);
+            //Load content from currentDiffModel
+            String diffContent = diffModel.diff;
+            System.out.println(diffContent);
+            //Tokenize the content
+            List<String> diffContentTokens = Arrays.asList(diffContent.split("\\n"));
+            //Load content from file f
+            String projectFileContent = Files.readString(Path.of(projectFilePath));
+            System.out.println(projectFileContent);
+            //Tokenize the content
+            List<String> projectFileContentTokens = Arrays.asList(projectFileContent.split("\\n"));
+            //Create patch
+            Patch<String> patch = DiffUtils.diff(diffContentTokens, projectFileContentTokens);
+            //Save patch as diff
+            StringBuilder diffFileContent = new StringBuilder();
+            for (Delta<String> delta : patch.getDeltas()) {
+                System.out.println(delta);
+                diffFileContent.append(delta.toString()).append("\n\n");
+            }
+            //We will reuse currentDiffModel as newDiffModel
+            diffModel.diff = diffFileContent.toString();
+            dirService.createCommitDiffFile(projectDir, commitModel.getUID(), commitModel.getBranchID(), diffModel);
         }
 
         private LinkedList<CommitModel> getCommitChain(String projectDir, CommitModel currentCommit, LinkedList<CommitModel> currentList) throws Exception {
