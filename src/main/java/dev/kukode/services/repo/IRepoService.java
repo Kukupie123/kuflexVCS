@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 19/07/23, 8:00 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 24/07/23, 10:38 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -36,11 +36,23 @@ public interface IRepoService {
     boolean createNewCommit(String projectDir, String commitName, String comment) throws Exception;
 
     /**
+     * Creates a new Branch from another Branch & Commit
+     *
+     * @param projectDir      Root directory of the project
+     * @param branchName      Name of the branch
+     * @param branchComment   Comment for the branch
+     * @param inheritedBranch The BranchID the new branch is inheriting from
+     * @param inheritedCommit The CommitID the new branch is inheriting from
+     * @return True if successful
+     */
+    boolean createNewBranch(String projectDir, String branchName, String branchComment, String inheritedBranch, String inheritedCommit) throws Exception;
+
+    /**
      * Loads a commit.
      *
      * @param projectDir Root directory of the project
      * @param commitID   ID of the commit
      * @param branchID   BranchID of the commit
      */
-    void loadCommit(String projectDir, String commitID, String branchID);
+    void loadCommit(String projectDir, String commitID, String branchID) throws Exception;
 }

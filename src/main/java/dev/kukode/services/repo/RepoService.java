@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 19/07/23, 8:00 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 24/07/23, 10:38 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -98,7 +98,7 @@
             //Get Current commit
             CommitModel currentCommitModel = dirService.getCommitByID(projectDir, kuflexRepo.activeCommit, kuflexRepo.activeBranch);
             //Create New commit
-            CommitModel newCommitModel = new CommitModel(commitName, comment, new Date(), currentCommitModel.getBranchID(), currentCommitModel.getInheritedCommit());
+            CommitModel newCommitModel = new CommitModel(commitName, comment, new Date(), currentCommitModel.getBranchID(), currentCommitModel.getInheritedCommit(), null);
             //Create New commit directory
             dirService.createCommitDir(projectDir, newCommitModel.getBranchID(), newCommitModel.getUID());
             //Add new commit to commitDB of DB
@@ -209,7 +209,19 @@
         }
 
         @Override
-        public void loadCommit(String projectDir, String commitID, String branchID) {
+        public boolean createNewBranch(String projectDir, String branchName, String branchComment, String inheritedBranch, String inheritedCommit) throws Exception {
+            /*
+            The first commit of the branch will NEED to have it's branchID as the interhitedBranch ID.
+            This is needed to load commits which go through more than one branch.
+            When we notice that commits branchID and the branchID of the branch Don't match we know
+            that it is the FIRST commit of the branch
+            and we can now refer to branch's inherited Commit and inherited BranchID to track.
+             */
+            return false;
+        }
+
+        @Override
+        public void loadCommit(String projectDir, String commitID, String branchID) throws Exception {
             /*
             1. Make a Linked-List that is going to link initialBranch to the commit we want to load
             2. We can do this by traversing down from the commit we need to load to the initial commit
@@ -217,7 +229,12 @@
             4. On the way we will come across files that are present in old commit but not in new commit, we move those in vault
             5. On the way we will come across files that are not present in old commit but present in new commit, we just read their diffs content and load the file
              */
+
+            CommitModel commitToLoad = dirService.getCommitByID(projectDir, commitID, branchID);
+            String prevBranchID = commitToLoad.getBranchID();
+            String prevCommitID = commitToLoad.getInheritedCommit();
         }
+
 
         private boolean doesRepoAlreadyExist(String projectDir) {
             File repoDir = new File(projectDir + "\\.kuflex");
@@ -241,7 +258,7 @@
 
         private CommitModel createInitialCommit(String projectDir, String commitName, String commitComment, String branchID) throws Exception {
             //Create commit model
-            CommitModel commitModel = new CommitModel(commitName, commitComment, new Date(), branchID, "");
+            CommitModel commitModel = new CommitModel(commitName, commitComment, new Date(), branchID, null, null);
             //Create commit directory
             dirService.createCommitDir(projectDir, branchID, commitModel.getUID());
             //Create CommitDB file
