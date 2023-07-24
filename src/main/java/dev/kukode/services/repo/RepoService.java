@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 24/07/23, 10:38 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 24/07/23, 11:15 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -27,10 +27,7 @@
     import java.io.File;
     import java.nio.file.DirectoryNotEmptyException;
     import java.nio.file.Files;
-    import java.util.ArrayList;
-    import java.util.Arrays;
-    import java.util.Date;
-    import java.util.List;
+    import java.util.*;
     /*
     TODO: Redesign the whole File diff storing algorithm
     Here is my new design idea
@@ -230,11 +227,53 @@
             5. On the way we will come across files that are not present in old commit but present in new commit, we just read their diffs content and load the file
              */
 
-            CommitModel commitToLoad = dirService.getCommitByID(projectDir, commitID, branchID);
-            String prevBranchID = commitToLoad.getBranchID();
-            String prevCommitID = commitToLoad.getInheritedCommit();
+            // Traverse from currentCommit to initialCommit and store them as a linked list
+            CommitModel currentCommit = dirService.getCommitByID(projectDir, commitID, branchID);
+            LinkedList<CommitModel> commitChain = getCommitChain(projectDir, currentCommit, null);
+
+            //TODO
+            // Iterate the chain from initial all the way to currentCommit,
+            //Load file diffs & check file deletion and addition and use vault directory accordingly
+
         }
 
+        private LinkedList<CommitModel> getCommitChain(String projectDir, CommitModel currentCommit, LinkedList<CommitModel> currentList) throws Exception {
+            //Null during first function call, initialize a list and add currentCommit to the list
+            if (currentList == null) {
+                currentList = new LinkedList<>();
+                currentList.add(currentCommit);
+            }
+
+            //Check if this commit has inheritedBranchID, If true, then this is an initial commit to a branch
+            //Else load inherited commit
+            if (currentCommit.getInheritedBranch() != null && !currentCommit.getInheritedBranch().isEmpty() && !currentCommit.getInheritedBranch().equals(currentCommit.getBranchID())) {
+
+                /*
+                Since this in inherited commit
+                Load Previous commit
+                from which this commit was inherited from
+                by using inheritedBranchID and inheritedCommitID
+                */
+                CommitModel prevCommit = dirService.getCommitByID(projectDir, currentCommit.getInheritedCommit(), currentCommit.getInheritedBranch());
+                currentList.add(prevCommit);
+                return getCommitChain(projectDir, prevCommit, currentList);
+            } else {
+
+                //Check if this is the initial branch
+                KuflexRepoModel kuflexRepoModel = dirService.getKuFlexRepoModel(projectDir);
+                if (currentCommit.getBranchID().equals(kuflexRepoModel.initialBranch)) {
+                    if (currentCommit.getUID().equals(kuflexRepoModel.initialCommit)) {
+                        currentList.add(currentCommit);
+                        return currentList;
+                    }
+                }
+
+                //Load the previous commit of the same branch by using inherited commit variables value
+                CommitModel prevCommit = dirService.getCommitByID(projectDir, currentCommit.getInheritedCommit(), currentCommit.getBranchID());
+                currentList.add(prevCommit);
+                return getCommitChain(projectDir, prevCommit, currentList);
+            }
+        }
 
         private boolean doesRepoAlreadyExist(String projectDir) {
             File repoDir = new File(projectDir + "\\.kuflex");
