@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 24/07/23, 12:07 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 24/07/23, 12:18 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -226,7 +226,7 @@
             //Tokenize the content
             List<String> projectFileContentTokens = Arrays.asList(projectFileContent.split("\\n"));
             //Create patch
-            Patch<String> patch = DiffUtils.diff(diffContentTokens, projectFileContentTokens);
+            Patch<String> patch = DiffUtils.diff(projectFileContentTokens, diffContentTokens);
             //Save patch as diff
             StringBuilder diffFileContent = new StringBuilder();
             for (Delta<String> delta : patch.getDeltas()) {
