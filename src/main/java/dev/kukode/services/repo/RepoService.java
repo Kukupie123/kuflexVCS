@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 24/07/23, 12:27 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 24/07/23, 1:46 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -92,6 +92,7 @@
 
         @Override
         public boolean createNewCommit(String projectDir, String commitName, String comment) throws Exception {
+            //TODO: Change create commit function to make diff by loading from initial to final
             var kuflexRepo = dirService.getKuFlexRepoModel(projectDir);
             //Get Current commit
             CommitModel currentCommitModel = dirService.getCommitByID(projectDir, kuflexRepo.activeCommit, kuflexRepo.activeBranch);
