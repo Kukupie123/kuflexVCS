@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 24/07/23, 12:18 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 24/07/23, 12:27 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -214,6 +214,11 @@
         }
 
         private void createDiffFile(String projectDir, DiffModel diffModel, CommitModel commitModel, String projectFilePath) throws Exception {
+            //TODO:
+            // Create our own file diff function
+            // and we also need
+            // to load from initial branch all the way upto latest branch
+            // before we commit so that we get the correct diff content
             if (diffModel == null) throw new Exception("Failed to find diff model for file " + projectFilePath);
             //Load content from currentDiffModel
             String diffContent = diffModel.diff;
