@@ -9,114 +9,95 @@ These are the features that I have planned and ready to implement.
 2. Branches
    1. We can have multiple branches just like other VCS.
 3. Commits
-   1. Branches will have commits.
+    1. Branches will have commits.
 4. Rollbacks and switching commits
-   1. We will be able to roll back changes and switch to different commits from different branches.
+    1. We will be able to roll back changes and switch to different commits from different branches.
 5. Integration with Cloud storage platform as remote Repo
 
 Features that I will implement late into development :- <br>
+
 1. Cloud Platform as Repository hub
 2. Handling conflicts
 
-# Structure
-## Folder Structure
-![dirstructure.jpg](external_resources/dirstructure.jpg)
-## Models
-These models may go through changes as time goes
-```
-KuFlexRepo model
-{
-Project Name;
-Creation Date;
-Creator Name;
-Initial Branch;
-Initial Commit;
-Current Branch;
-Current Commit;
-Rest of the details will get updated as time goes
-}
-```
+# Problems and solutions
 
-```
-Branch model
-{
-Name;
-UID;
-InheritedFrom; 
-//From where was this branch created
-//Which Branch and Commit did this branch out from
+## File Diff chain problem
 
-//When creating a new branch it needs to automatically generate an initial commit.
-}
-```
-```
-Commit model
-{
-Commit Name;
-Commit Comment;
-UID;
-InheritedFrom;
-//From which Commit was this inherited from.
-//The inheritedFrom has to be the from the same branch.
-}
-```
+One of the main concerns I had was regarding working with File Content Diff handling.
+It's easy to overlook it as it's just storing the difference between two versions of right?
+<Br>
 
-## Architecture
+1. Well,
+   the first of you saving a file diff is easy as all you have to do is copy-paste the file content and save it as a
+   diff.
+   <br>
+2. The second diff save is easy too as you will be comparing the content of the file diff from first commit with the
+   file content of the file in the project.<br>
+3. But when you try to make the third commit you think you can just compare the file diff from the second commit with
+   the file content of the file in the project.
+   <br>
+4. This will fail terribly as in the second diff
+   where you compared the first diff with the content of the file in the project.
+   The content of A is simply the copied content of the file as shown in point 1.
+5. For the third diff, we can't compare 2nd diff as 2nd diff file contains a structured diff layout defining the diff
+   between first diff and second diff.
 
-.kuflex is the folder where all the files and folders are going to be found which will make the application function
-properly.
-It is not recommended to mess with these files and folders directly. <br> <br>
+### Solution
 
-Every Branch is going to be its own folder under "branches". <br>
-A Branch will have several subdirectories that are going to represent the commits done on that branch.
-We keep a database record of Commits under a branch directory to keep track of commits. These record needs to be in
-linked list structure so that it's easy to switch commits.
-<br> <br>
+The solution is
+to load the diff starting from the first commit to the latest commit we want to load step by step.
+This will help us load the file content in order starting from the first commit to the last commit,
+we can then create a new file diff if we are creating a new commit.
+We must not overwrite the project's file content and instead save it temporarily somewhere and use it for file diff.
+<br>
+This gets overly complicated with my testing so the ultimate solution I came up
+with is to store the File Diffs in a database.
+Each File diff will be its own database.
+File1 will have a file1DiffDB that will store the diffs it went through.
+<br>
+We will make use of index
+that increments to track the direction of the file diff with 0 being it's first file diff
+(first file diff is basically a copy of the file content).
+<br>
+We will then simply add new diff record as we keep creating new commit.
+Since we are using indexes we should be able to back track
+to it's first diff and then start loading the content based on diffs.
 
-A commit directory will have a snapshot of the project structure at that time as well as a file that is going to store
-the File Content Diff for all the files. <br>
-We will be using the snapshots between two commits to determine which file has been removed and which file has been
-added.
-I still need to figure out how to handle file content diff.
-<br> <br>
+## Addition/Removing of files in commit
 
-We also have a vault system where we are going to store files that are not relevant to the currently active commit, and
-once we switch to the commit where the file is relevant. <br> <br> <br>
+Files can be added or removed as project keeps evolving.
+These files can't be removed
+as devs may want
+to go back to a commit where the repository will need to load a file that does not exist in the current commit.
 
-We keep a database record of branches in tree based structure. <br>
-We need tree based structure because a branch can be formed from another branch and another commit. <br> <br>
+### Solution
 
-### .kuflex-> kuflexrepo.json
+The solution is to take a snapshot of the structure of the project per commit.
+<br>
+We can then use the snapshot to get the files that need to be loaded and load them from file diff DB.
+<br>
 
-This is the repository that is going to have data related to the project such as project name, creation date etc.
+File diff DB also saves the original content with it's index value as 0.
 
-### Branches DB
-Every branch we create will be recorded into this database. A branch can be created from an existing branch and a commit within that branch.
-### .kuflex->branches
-Every branch is going to be its own folder whose names are going to be their UIDs.
-If a project has 3 branches then we will be able to find 3 directories inside "branches" directory representing the 3 branches
-### .kuflex->branches->ExampleBranch
+## Future: Having a chain of commits to load can be heavy on the computation
 
-## Instruction flow examples
-### Simple Tasks
+Having to always load from initial to last commit has a lot of backtracking, reading, altering,
+comparing etc, and this can get heavy.
 
-#### Initialising Repository
+### Solution
 
-* Create the necessary directories and files(.kuflex, kuflexrepo.json) <br>
-  Default Branch and Commit will be created later.
-* Create a special branch. The reason I call it special is because it defies the normal rule of creating a branch. <br>
-  A branch needs to be created from another branch and another commit but this one doesn't need them.
+Save state in the middle
+where we copy the contents of the entire project and we can use this as a point
+when we are need to load commit that are far away from the initial commit.
+Saving state per X number of commits in a branch is a good way, but I have not planned this out yet
 
-#### Creating Initial Special Branch
+# Architecture
 
-* Add new record in Branch DB
-* Add new directory for the branch
-* Create initial Commit <br>
-  An initial Commit is going to copy all the files that are part of the project's snapshot
+## Folder structure
 
-#### Creating Initial Commit
-
-* Create new directory for the Commit
-* Create CommitDB in the branch and add the commit
-* Create ProjectSnapshot file for the commit
-* File Diff WIP
+1. .KuFlex (Directory)
+    1. KuFlexRepo.json (FILE)
+    2. SnapshotDB.db (FILE)
+    3. BranchDB.db (FILE)
+    4. Diffs (Directory)
+        1. FileDiff.diff (FILE. Name will be path of the file in encoded format which we can decode)

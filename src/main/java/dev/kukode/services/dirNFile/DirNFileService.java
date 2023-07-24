@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 19/07/23, 8:00 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 25/07/23, 12:18 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -8,12 +8,11 @@
 package dev.kukode.services.dirNFile;
 
 import com.google.gson.Gson;
-import dev.kukode.models.DiffModel;
 import dev.kukode.models.KuflexRepoModel;
-import dev.kukode.models.SnapshotModel;
 import dev.kukode.models.branches.BranchDB;
 import dev.kukode.models.commits.CommitDB;
 import dev.kukode.models.commits.CommitModel;
+import dev.kukode.models.snapshots.SnapshotModel;
 import dev.kukode.util.ConstantNames;
 import org.springframework.stereotype.Service;
 
@@ -427,4 +426,6 @@ public class DirNFileService {
     }
 
 
+    public void createSnapshotDBFile(String projectDir) {
+    }
 }
