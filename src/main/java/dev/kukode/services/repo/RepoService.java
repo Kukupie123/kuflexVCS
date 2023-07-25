@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 25/07/23, 10:28 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 25/07/23, 11:41 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -13,7 +13,6 @@
     import dev.kukode.models.branches.BranchModel;
     import dev.kukode.models.commits.CommitDB;
     import dev.kukode.models.commits.CommitModel;
-    import dev.kukode.models.diffs.DiffDB;
     import dev.kukode.models.diffs.DiffModel;
     import dev.kukode.models.snapshots.SnapshotDB;
     import dev.kukode.models.snapshots.SnapshotModel;
@@ -23,11 +22,9 @@
     import org.slf4j.LoggerFactory;
     import org.springframework.stereotype.Service;
 
-    import java.io.File;
     import java.nio.file.Files;
     import java.nio.file.Path;
     import java.util.ArrayList;
-    import java.util.Base64;
     import java.util.Date;
     import java.util.List;
 
@@ -40,23 +37,6 @@
         public RepoService(Gson gson, DirNFileService dirService) {
             this.gson = gson;
             this.dirService = dirService;
-        }
-
-
-        public static String encode(String input) {
-            byte[] encodedBytes = Base64.getEncoder().encode(input.getBytes());
-            return new String(encodedBytes);
-        }
-
-        public static String decode(String encodedInput) {
-            byte[] decodedBytes = Base64.getDecoder().decode(encodedInput);
-            return new String(decodedBytes);
-        }
-
-
-        private boolean doesRepoAlreadyExist(String projectDir) {
-            File repoDir = new File(projectDir + "\\.kuflex");
-            return repoDir.isDirectory();
         }
 
 
@@ -88,14 +68,7 @@
 
             //Create snapshotDB file and add snapshot for the initial commit
             String snapShotID = initialBranchModel.getUID() + initialCommitModel.getUID();
-            List<String> filePaths = dirService.getProjectFilesPath(projectDir);
-            List<String> unwantedPaths = new ArrayList<>();
-            filePaths.forEach(s -> {
-                if (s.contains("\\" + ConstantNames.KUFLEX)) {
-                    unwantedPaths.add(s);
-                }
-            });
-            filePaths.removeAll(unwantedPaths);
+            List<String> filePaths = getProjectFileSnapshot(projectDir);
             SnapshotModel snapshotModel = new SnapshotModel(snapShotID, filePaths);
             SnapshotDB snapshotDB = new SnapshotDB();
             snapshotDB.getSnapshotModels().add(snapshotModel);
@@ -103,17 +76,11 @@
 
             //14. Create DiffDB for each file
             for (String filePath : filePaths) {
-                //Create encoded name from path
-                String filePathEncoded = encode(filePath);
                 //Read the content from the project for each file
                 String diff = Files.readString(Path.of(projectDir + filePath));
                 //Create a Diff model
                 DiffModel initialDiff = new DiffModel("0", diff, initialCommitModel.getUID(), initialBranchModel.getUID(), null, null, new ArrayList<>());
-                //Create Diff DB and add initial Diff
-                DiffDB diffDB = new DiffDB(filePathEncoded);
-                diffDB.getDiffModels().add(initialDiff);
-                //Create Diff DB file
-                dirService.createInitialDiffDB(projectDir, diffDB);
+                dirService.createOrUpdateFileDiff(projectDir, filePath, initialDiff);
             }
 
             //15. Update Initial and Active commits and Branch in Repo
@@ -128,16 +95,18 @@
         @Override
         public boolean createNewCommit(String projectDir, String commitName, String comment) throws Exception {
             /*
-            1. Create new Commit Model
-            2. Create new snapshot model based on new commit model and branchID
-            3. Loop the snapshot and make two lists.
-            One will contain files who have diffs, Another will contain files that have no diffs
-            4. Create new diff file for the files that have no diff and add 0th record
-            5. For files that have diffs, load the diff dbs 0th index upto current commit.
-                1. Now create new diff model record
-            6. Add snapshot to DB
-            7. Add the new commit model to branch -> commitDB record
+
              */
+            var repo = dirService.getKuFlexRepoModel(projectDir);
+            var currentCommit = dirService.getCommitByID(projectDir, repo.activeCommit, repo.activeBranch);
+            var newCommit = new CommitModel(commitName, comment, new Date(), currentCommit.getBranchID(), currentCommit.getUID(), currentCommit.getBranchID());
+
+            //Is this the first commit after initial commit?
+            if (newCommit.getInheritedBranch().equals(repo.initialBranch) && newCommit.getInheritedCommit().equals(repo.initialCommit)) {
+                //Create snapshot
+                var newSnap = new SnapshotModel(newCommit.getBranchID() + newCommit.getUID(), getProjectFileSnapshot(projectDir));
+            }
+
             return false;
         }
 
@@ -156,5 +125,17 @@
             It's safe to delete because every file has a copy saved on it's original file diffs.
             i.e., 0th index
              */
+        }
+
+        private List<String> getProjectFileSnapshot(String projectDir) {
+            List<String> filePaths = dirService.getProjectFilesPath(projectDir);
+            List<String> unwantedPaths = new ArrayList<>();
+            filePaths.forEach(s -> {
+                if (s.contains("\\" + ConstantNames.KUFLEX)) {
+                    unwantedPaths.add(s);
+                }
+            });
+            filePaths.removeAll(unwantedPaths);
+            return filePaths;
         }
     }

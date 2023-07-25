@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 25/07/23, 10:28 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 25/07/23, 11:41 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -23,10 +23,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class DirNFileService {
@@ -460,12 +457,33 @@ public class DirNFileService {
         file.mkdirs();
     }
 
-    public void createInitialDiffDB(String projectDir, DiffDB diffDB) throws IOException {
-        File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.DiffDir, diffDB.getName());
-        file.createNewFile();
-        try (FileWriter fileWriter = new FileWriter(file)) {
-            String data = gson.toJson(diffDB);
-            fileWriter.write(data);
+    public static String encode(String input) {
+        byte[] encodedBytes = Base64.getEncoder().encode(input.getBytes());
+        return new String(encodedBytes);
+    }
+
+    public static String decode(String encodedInput) {
+        byte[] decodedBytes = Base64.getDecoder().decode(encodedInput);
+        return new String(decodedBytes);
+    }
+
+    public void createOrUpdateFileDiff(String projectDir, String fileName, DiffModel diffModel) throws IOException {
+        String encodedName = encode(fileName);
+        File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.DiffDir, encodedName);
+        if (file.exists() && file.isFile()) {
+            var diffDB = gson.fromJson(Files.readString(file.toPath()), DiffDB.class);
+            if (diffDB.getDiffModels() == null) {
+                diffDB.setDiffModels(new ArrayList<>());
+            }
+            diffDB.getDiffModels().add(diffModel);
+        } else {
+            var diffDB = new DiffDB();
+            diffDB.getDiffModels().add(diffModel);
+            file.createNewFile();
+            try (FileWriter fileWriter = new FileWriter(file)) {
+                fileWriter.write(gson.toJson(diffDB));
+            }
         }
     }
+
 }
