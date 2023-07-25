@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 25/07/23, 9:57 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 25/07/23, 10:28 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -168,13 +168,17 @@ public class DirNFileService {
     /**
      * Create BranchDB file inside Repository Directory that is going to hold all branches.
      */
-    public void createBranchDBFile(String projectDir) throws Exception {
+    public void createBranchDBFile(String projectDir, BranchDB initialBranch) throws Exception {
         File branchDBFile = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.BranchesDBFILE);
         if (branchDBFile.exists()) {
             throw new Exception("BranchDBFile already exists");
         }
         if (!branchDBFile.createNewFile()) {
             throw new Exception("Failed to create branchDBFile");
+        }
+
+        try (FileWriter fileWriter = new FileWriter(branchDBFile)) {
+            fileWriter.write(gson.toJson(initialBranch));
         }
     }
 
@@ -184,7 +188,7 @@ public class DirNFileService {
     public File getBranchDbFile(String projectDir) throws Exception {
         File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.BranchesDBFILE);
         if (!file.isFile()) {
-            throw new Exception("Failed to load " + ConstantNames.KUFLEXREPOFILE);
+            throw new Exception("Failed to load " + ConstantNames.BranchesDBFILE);
         }
         return file;
     }
@@ -230,11 +234,15 @@ public class DirNFileService {
      *
      * @param branchID BranchID where we are going to create commitDB file
      */
-    public void createCommitDBFileForBranch(String projectDir, String branchID) throws Exception {
+    public void createCommitDBFileForBranch(String projectDir, String branchID, CommitDB initialCOmmitDB) throws Exception {
         String filePath = projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + ConstantNames.CommitsDBFile;
         File commitDbFile = new File(filePath);
         if (!commitDbFile.createNewFile()) {
             throw new Exception("Failed to create commit DB File");
+        }
+
+        try (FileWriter fileWriter = new FileWriter(filePath)) {
+            fileWriter.write(gson.toJson(initialCOmmitDB));
         }
     }
 
@@ -430,9 +438,13 @@ public class DirNFileService {
     }
 
 
-    public void createSnapshotDBFile(String projectDir) throws IOException {
+    public void createSnapshotDBFile(String projectDir, SnapshotDB initialSnapshotDB) throws IOException {
         File path = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.SNAPSHOTDBFile);
         path.createNewFile();
+
+        try (FileWriter fileWriter = new FileWriter(path)) {
+            fileWriter.write(gson.toJson(initialSnapshotDB));
+        }
     }
 
     public void addSnapshotToSnapshotDB(String projectDir, SnapshotModel snapshotModel) throws IOException {

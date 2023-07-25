@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 25/07/23, 9:57 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 25/07/23, 10:28 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -9,12 +9,16 @@
 
     import com.google.gson.Gson;
     import dev.kukode.models.KuflexRepoModel;
+    import dev.kukode.models.branches.BranchDB;
     import dev.kukode.models.branches.BranchModel;
+    import dev.kukode.models.commits.CommitDB;
     import dev.kukode.models.commits.CommitModel;
     import dev.kukode.models.diffs.DiffDB;
     import dev.kukode.models.diffs.DiffModel;
+    import dev.kukode.models.snapshots.SnapshotDB;
     import dev.kukode.models.snapshots.SnapshotModel;
     import dev.kukode.services.dirNFile.DirNFileService;
+    import dev.kukode.util.ConstantNames;
     import org.slf4j.Logger;
     import org.slf4j.LoggerFactory;
     import org.springframework.stereotype.Service;
@@ -59,50 +63,43 @@
         @Override
         public void initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception {
 
-            //1. Create .KuFlex Directory
+            //Create .KuFlex Directory
             dirService.createKuFlexRepoDir(projectDir);
+            //Create Diff directory
+            dirService.createDiffDirectory(projectDir);
 
-            //2. Create KuFlexRepo.json
+            //Create KuFlexRepo.json
             dirService.createKuFlexRepoFile(projectDir, new KuflexRepoModel(projectName, creator, new Date()));
-
-            //3. Create BranchDB
-            dirService.createBranchDBFile(projectDir);
-
-            //4. Create SnapshotDB
-            dirService.createSnapshotDBFile(projectDir);
-
-            //5. Create an initial Branch Model object
+            //Create BranchesDB file, Branch Directory and add initial Branch to branchesDB
             BranchModel initialBranchModel = new BranchModel("Initial Branch", new Date(), null, null);
-
-            //6. Create Initial Branch Directory
             dirService.createBranchDirectory(projectDir, initialBranchModel.getUID());
-
-            //7. Add the created branch to BranchDB
-            var branchDB = dirService.getBranchDbModel(projectDir);
+            var branchDB = new BranchDB();
+            if (branchDB.branches == null) {
+                branchDB.branches = new ArrayList<>();
+            }
             branchDB.branches.add(initialBranchModel);
-            dirService.updateBranchDbFile(projectDir, branchDB);
+            dirService.createBranchDBFile(projectDir, branchDB);
 
-            //8. Create CommitDB file for the branch
-            dirService.createCommitDBFileForBranch(projectDir, initialBranchModel.getUID());
-
-            //9. Create an Initial Commit Model object
+            //Create CommitDB file for initial branch, add initial commit to the CommitDB
+            var commitDb = new CommitDB();
             CommitModel initialCommitModel = new CommitModel("Initial Commit", "", new Date(), initialBranchModel.getUID(), null, null);
+            commitDb.commits.add(initialCommitModel);
+            dirService.createCommitDBFileForBranch(projectDir, initialCommitModel.getBranchID(), commitDb);
 
-            //10. Create a snapshot Model object
+            //Create snapshotDB file and add snapshot for the initial commit
             String snapShotID = initialBranchModel.getUID() + initialCommitModel.getUID();
             List<String> filePaths = dirService.getProjectFilesPath(projectDir);
+            List<String> unwantedPaths = new ArrayList<>();
+            filePaths.forEach(s -> {
+                if (s.contains("\\" + ConstantNames.KUFLEX)) {
+                    unwantedPaths.add(s);
+                }
+            });
+            filePaths.removeAll(unwantedPaths);
             SnapshotModel snapshotModel = new SnapshotModel(snapShotID, filePaths);
-
-            //11. Add initial Commit Model to CommitDB of the initial Branch
-            var commitDb = dirService.getCommitDbModelForBranch(projectDir, initialBranchModel.getUID());
-            commitDb.commits.add(initialCommitModel);
-            dirService.updateCommitDbForBranch(projectDir, initialCommitModel.getBranchID(), commitDb);
-
-            //12. Add the snapshot to snapshotDB
-            dirService.addSnapshotToSnapshotDB(projectDir, snapshotModel);
-
-            //13. Create Diff directory
-            dirService.createDiffDirectory(projectDir);
+            SnapshotDB snapshotDB = new SnapshotDB();
+            snapshotDB.getSnapshotModels().add(snapshotModel);
+            dirService.createSnapshotDBFile(projectDir, snapshotDB);
 
             //14. Create DiffDB for each file
             for (String filePath : filePaths) {
@@ -111,7 +108,7 @@
                 //Read the content from the project for each file
                 String diff = Files.readString(Path.of(projectDir + filePath));
                 //Create a Diff model
-                DiffModel initialDiff = new DiffModel(0, diff, initialCommitModel.getUID(), initialBranchModel.getUID(), null, null, new ArrayList<>());
+                DiffModel initialDiff = new DiffModel("0", diff, initialCommitModel.getUID(), initialBranchModel.getUID(), null, null, new ArrayList<>());
                 //Create Diff DB and add initial Diff
                 DiffDB diffDB = new DiffDB(filePathEncoded);
                 diffDB.getDiffModels().add(initialDiff);
@@ -124,7 +121,7 @@
             repo.initialCommit = initialCommitModel.getUID();
             repo.activeCommit = initialCommitModel.getUID();
             repo.initialCommit = initialBranchModel.getUID();
-            repo.activeBranch = initialBranchModel.getUID();
+            repo.initialBranch = initialBranchModel.getUID();
             dirService.updateKuFlexRepo(projectDir, repo);
         }
 
