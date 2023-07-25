@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 25/07/23, 12:18 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 25/07/23, 9:57 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -12,12 +12,16 @@ import dev.kukode.models.KuflexRepoModel;
 import dev.kukode.models.branches.BranchDB;
 import dev.kukode.models.commits.CommitDB;
 import dev.kukode.models.commits.CommitModel;
+import dev.kukode.models.diffs.DiffDB;
+import dev.kukode.models.diffs.DiffModel;
+import dev.kukode.models.snapshots.SnapshotDB;
 import dev.kukode.models.snapshots.SnapshotModel;
 import dev.kukode.util.ConstantNames;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -309,7 +313,7 @@ public class DirNFileService {
      * @param branchID ID of the branch that the commit belongs to
      */
     public File getCommitSnapshotFile(String projectDir, String commitID, String branchID) {
-        return new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID, ConstantNames.SNAPSHOTFILE);
+        return new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + commitID, ConstantNames.SNAPSHOTDBFile);
     }
 
     /**
@@ -426,6 +430,30 @@ public class DirNFileService {
     }
 
 
-    public void createSnapshotDBFile(String projectDir) {
+    public void createSnapshotDBFile(String projectDir) throws IOException {
+        File path = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.SNAPSHOTDBFile);
+        path.createNewFile();
+    }
+
+    public void addSnapshotToSnapshotDB(String projectDir, SnapshotModel snapshotModel) throws IOException {
+        File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.SNAPSHOTDBFile);
+
+        String data = Files.readString(file.toPath());
+        var snap = gson.fromJson(data, SnapshotDB.class);
+        snap.getSnapshotModels().add(snapshotModel);
+    }
+
+    public void createDiffDirectory(String projectDir) {
+        File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.DiffDir);
+        file.mkdirs();
+    }
+
+    public void createInitialDiffDB(String projectDir, DiffDB diffDB) throws IOException {
+        File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.DiffDir, diffDB.getName());
+        file.createNewFile();
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            String data = gson.toJson(diffDB);
+            fileWriter.write(data);
+        }
     }
 }
