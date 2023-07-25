@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 25/07/23, 11:41 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 26/07/23, 12:51 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -16,6 +16,7 @@
     import dev.kukode.models.diffs.DiffModel;
     import dev.kukode.models.snapshots.SnapshotDB;
     import dev.kukode.models.snapshots.SnapshotModel;
+    import dev.kukode.services.diff.DiffService;
     import dev.kukode.services.dirNFile.DirNFileService;
     import dev.kukode.util.ConstantNames;
     import org.slf4j.Logger;
@@ -32,11 +33,14 @@
     public class RepoService implements IRepoService {
         final Gson gson;
         final DirNFileService dirService;
+
+        final DiffService diffService;
         Logger logger = LoggerFactory.getLogger(this.getClass());
 
-        public RepoService(Gson gson, DirNFileService dirService) {
+        public RepoService(Gson gson, DirNFileService dirService, DiffService diffService) {
             this.gson = gson;
             this.dirService = dirService;
+            this.diffService = diffService;
         }
 
 
@@ -85,26 +89,64 @@
 
             //15. Update Initial and Active commits and Branch in Repo
             var repo = dirService.getKuFlexRepoModel(projectDir);
-            repo.initialCommit = initialCommitModel.getUID();
-            repo.activeCommit = initialCommitModel.getUID();
-            repo.initialCommit = initialBranchModel.getUID();
-            repo.initialBranch = initialBranchModel.getUID();
+            repo.setInitialCommit(initialCommitModel.getUID());
+            repo.setActiveCommit(initialCommitModel.getUID());
+            repo.setInitialBranch(initialBranchModel.getUID());
+            repo.setActiveBranch(initialBranchModel.getUID());
             dirService.updateKuFlexRepo(projectDir, repo);
         }
 
         @Override
         public boolean createNewCommit(String projectDir, String commitName, String comment) throws Exception {
-            /*
-
-             */
             var repo = dirService.getKuFlexRepoModel(projectDir);
-            var currentCommit = dirService.getCommitByID(projectDir, repo.activeCommit, repo.activeBranch);
+            var currentCommit = dirService.getCommitByID(projectDir, repo.getActiveCommit(), repo.getActiveBranch());
             var newCommit = new CommitModel(commitName, comment, new Date(), currentCommit.getBranchID(), currentCommit.getUID(), currentCommit.getBranchID());
 
+            dirService.addNewCommit(projectDir, newCommit);
+
             //Is this the first commit after initial commit?
-            if (newCommit.getInheritedBranch().equals(repo.initialBranch) && newCommit.getInheritedCommit().equals(repo.initialCommit)) {
+            if (newCommit.getInheritedBranch().equals(repo.getInitialBranch()) && newCommit.getInheritedCommit().equals(repo.getInitialCommit())) {
+                System.out.println("second commit");
                 //Create snapshot
-                var newSnap = new SnapshotModel(newCommit.getBranchID() + newCommit.getUID(), getProjectFileSnapshot(projectDir));
+                List<String> filePaths = getProjectFileSnapshot(projectDir);
+                var newSnap = new SnapshotModel(newCommit.getBranchID() + newCommit.getUID(), filePaths);
+                dirService.addNewSnapshot(projectDir, newSnap);
+
+                //Create file diff for each snapshot file or update
+                for (String s : filePaths) {
+                    String currentContent = Files.readString(Path.of(projectDir + s));
+                    if (dirService.doesDiffDBExist(projectDir, s)) {
+                        var currentDiffDBModel = dirService.getDiffDBForFile(projectDir, s);
+                        DiffModel currentDiffModel = null;
+                        for (DiffModel dm : currentDiffDBModel.getDiffModels()) {
+                            if (dm.getCommitID().equals(currentCommit.getUID()) && dm.getBranchID().equals(currentCommit.getBranchID())) {
+                                currentDiffModel = dm;
+                                break;
+                            }
+                        }
+                        assert currentDiffModel != null;
+                        String originalFileContent = currentDiffModel.getDiff();
+                        String diffString = diffService.generateFileDiff(originalFileContent, currentContent);
+
+                        var newDiffModel = new DiffModel(newCommit.getBranchID() + newCommit.getUID(), diffString, newCommit.getUID(), newCommit.getBranchID(), currentCommit.getUID(), currentCommit.getBranchID(), new ArrayList<>());
+
+                        dirService.createOrUpdateFileDiff(projectDir, s, newDiffModel);
+
+                        //Update the Children list of current diff and add new commit
+                        currentDiffModel.getChildrenBranchCommit().add(newCommit.getBranchID() + newCommit.getUID());
+
+                        dirService.createOrUpdateFileDiff(projectDir, s, currentDiffModel);
+
+                    }
+                }
+
+                //Update active branch and commit
+                repo.setActiveBranch(newCommit.getBranchID());
+                repo.setActiveCommit(newCommit.getUID());
+                dirService.updateKuFlexRepo(projectDir, repo);
+            } else {
+                System.out.println("WIP");
+                //WIP
             }
 
             return false;

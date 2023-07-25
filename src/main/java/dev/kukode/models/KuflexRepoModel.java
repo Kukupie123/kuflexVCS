@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 15/07/23, 8:51 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 26/07/23, 12:51 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -8,10 +8,14 @@
 package dev.kukode.models;
 
 import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.util.Date;
 
 @Getter
+@Setter
+@ToString
 public class KuflexRepoModel {
 
     public KuflexRepoModel(String projectName, String creatorName, Date creationDate) {
@@ -20,12 +24,12 @@ public class KuflexRepoModel {
         this.creationDate = creationDate;
     }
 
-    public String projectName;
-    public String creatorName;
-    public Date creationDate;
+    String projectName;
+    String creatorName;
+    Date creationDate;
 
-    public String initialBranch; //The branch that was initially created
-    public String initialCommit; //The commit that was initially created for the initialBranch
-    public String activeBranch; //The currently active branch
-    public String activeCommit; //The currently active commit we are working with
+    String initialBranch; //The branch that was initially created
+    String initialCommit; //The commit that was initially created for the initialBranch
+    String activeBranch; //The currently active branch
+    String activeCommit; //The currently active commit we are working with
 }
