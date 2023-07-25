@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 26/07/23, 12:51 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 26/07/23, 1:08 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -83,7 +83,7 @@
                 //Read the content from the project for each file
                 String diff = Files.readString(Path.of(projectDir + filePath));
                 //Create a Diff model
-                DiffModel initialDiff = new DiffModel("0", diff, initialCommitModel.getUID(), initialBranchModel.getUID(), null, null, new ArrayList<>());
+                DiffModel initialDiff = new DiffModel("0", diff, initialCommitModel.getUID(), initialBranchModel.getUID(), new ArrayList<>());
                 dirService.createOrUpdateFileDiff(projectDir, filePath, initialDiff);
             }
 
@@ -128,7 +128,7 @@
                         String originalFileContent = currentDiffModel.getDiff();
                         String diffString = diffService.generateFileDiff(originalFileContent, currentContent);
 
-                        var newDiffModel = new DiffModel(newCommit.getBranchID() + newCommit.getUID(), diffString, newCommit.getUID(), newCommit.getBranchID(), currentCommit.getUID(), currentCommit.getBranchID(), new ArrayList<>());
+                        var newDiffModel = new DiffModel(newCommit.getBranchID() + newCommit.getUID(), diffString, newCommit.getUID(), newCommit.getBranchID(), new ArrayList<>());
 
                         dirService.createOrUpdateFileDiff(projectDir, s, newDiffModel);
 

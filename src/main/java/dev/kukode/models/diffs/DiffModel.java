@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 26/07/23, 12:51 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 26/07/23, 1:08 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -24,8 +24,6 @@ public class DiffModel {
     String commitID;
     String branchID;
 
-    String prevCommitID; //Parent of the commit from whom this commit diff extended
-    String prevBranchID;
 
     List<String> childrenBranchCommit; //Children Commits will be stored here
 }
