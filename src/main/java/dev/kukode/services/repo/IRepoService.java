@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 24/07/23, 10:38 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 26/07/23, 7:14 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -30,10 +30,9 @@ public interface IRepoService {
      * @param projectDir Root Directory of the project
      * @param commitName Name of the commit
      * @param comment    Comment for the commit
-     * @return true if successful
      * @throws Exception File related exception
      */
-    boolean createNewCommit(String projectDir, String commitName, String comment) throws Exception;
+    void createNewCommit(String projectDir, String commitName, String comment) throws Exception;
 
     /**
      * Creates a new Branch from another Branch & Commit

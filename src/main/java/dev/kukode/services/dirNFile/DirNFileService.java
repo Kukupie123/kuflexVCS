@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 26/07/23, 12:51 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 26/07/23, 7:14 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -66,6 +66,16 @@ public class DirNFileService {
         return filePaths;
     }
 
+    public static String encode(String input) {
+        byte[] encodedBytes = Base64.getEncoder().encode(input.getBytes());
+        return new String(encodedBytes);
+    }
+
+    public static String decode(String encodedInput) {
+        byte[] decodedBytes = Base64.getDecoder().decode(encodedInput);
+        return new String(decodedBytes);
+    }
+
 
     //REPOSITORY***********************
 
@@ -121,7 +131,7 @@ public class DirNFileService {
     }
 
     /**
-     * Update KuFlexRepo with new KuFlexRepo object
+     * Update KuFlexRepo with a new KuFlexRepo object
      *
      * @param kuflexRepoModel Updated KuFlexRepo object
      */
@@ -139,9 +149,6 @@ public class DirNFileService {
 
     //BRANCH*****************
 
-    /**
-     * Create new Branch directory inside repository directory
-     */
     public void createBranchDirectory(String projectDir, String branchID) throws Exception {
         File branchDir = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID);
         if (!branchDir.mkdirs()) {
@@ -149,9 +156,7 @@ public class DirNFileService {
         }
     }
 
-    /**
-     * Create BranchDB file inside Repository Directory that is going to hold all branches.
-     */
+
     public void createBranchDBFile(String projectDir, BranchDB initialBranch) throws Exception {
         File branchDBFile = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.BranchesDBFILE);
         if (branchDBFile.exists()) {
@@ -166,12 +171,7 @@ public class DirNFileService {
         }
     }
 
-
-    /**
-     * Create CommitDB file for the given bran
-     *
-     * @param branchID BranchID where we are going to create commitDB file
-     */
+    //COMMITS
     public void createCommitDBFileForBranch(String projectDir, String branchID, CommitDB initialCOmmitDB) throws Exception {
         String filePath = projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + ConstantNames.CommitsDBFile;
         File commitDbFile = new File(filePath);
@@ -184,12 +184,7 @@ public class DirNFileService {
         }
     }
 
-    /**
-     * Get CommitModel based on IDs
-     *
-     * @param commitID ID of the commit
-     * @param branchID ID of the branch to which the commit belongs to
-     */
+
     public CommitModel getCommitByID(String projectDir, String commitID, String branchID) throws Exception {
         CommitDB commitDB = getCommitDbModelForBranch(projectDir, branchID);
         for (CommitModel commit : commitDB.commits) {
@@ -200,11 +195,7 @@ public class DirNFileService {
         return null;
     }
 
-    /**
-     * Get CommitDB file for a branch
-     *
-     * @param branchID ID of the branch
-     */
+
     public File getCommitDbFileForBranch(String projectDir, String branchID) throws Exception {
         String path = projectDir + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + ConstantNames.CommitsDBFile;
         File file = new File(path);
@@ -214,17 +205,34 @@ public class DirNFileService {
         return file;
     }
 
-    /**
-     * Get CommitDBModel for a branch
-     *
-     * @param branchID ID of the branch
-     */
+
     public CommitDB getCommitDbModelForBranch(String projectDir, String branchID) throws Exception {
         File file = getCommitDbFileForBranch(projectDir, branchID);
         return gson.fromJson(Files.readString(file.toPath()), CommitDB.class);
     }
 
+    public void AddOrUpdateCommit(String projectDir, CommitModel newCommit) throws Exception {
+        var commitDB = getCommitDbModelForBranch(projectDir, newCommit.getBranchID());
+        CommitModel commitModelToRemove = null;
+        for (CommitModel cm : commitDB.commits) {
+            if (cm.getUID().equals(newCommit.getUID())) {
+                commitModelToRemove = cm;
+                break;
+            }
+        }
+        if (commitModelToRemove != null)
+            commitDB.commits.remove(commitModelToRemove);
 
+        commitDB.commits.add(newCommit);
+        var file = getCommitDbFileForBranch(projectDir, newCommit.getBranchID());
+
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            fileWriter.write(gson.toJson(commitDB));
+        }
+    }
+
+
+    //SNAPSHOTS
     public void createSnapshotDBFile(String projectDir, SnapshotDB initialSnapshotDB) throws IOException {
         File path = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.SNAPSHOTDBFile);
         path.createNewFile();
@@ -234,23 +242,23 @@ public class DirNFileService {
         }
     }
 
+    public void addNewSnapshot(String projectDir, SnapshotModel newSnap) throws IOException {
+        File path = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.SNAPSHOTDBFile);
+        var db = gson.fromJson(Files.readString(path.toPath()), SnapshotDB.class);
+        db.getSnapshotModels().add(newSnap);
+        try (FileWriter fileWriter = new FileWriter(path)) {
+            fileWriter.write(gson.toJson(db));
+        }
+    }
 
+
+    //DIFF
     public void createDiffDirectory(String projectDir) {
         File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.DiffDir);
         file.mkdirs();
     }
 
-    public static String encode(String input) {
-        byte[] encodedBytes = Base64.getEncoder().encode(input.getBytes());
-        return new String(encodedBytes);
-    }
-
-    public static String decode(String encodedInput) {
-        byte[] decodedBytes = Base64.getDecoder().decode(encodedInput);
-        return new String(decodedBytes);
-    }
-
-    public void createOrUpdateFileDiff(String projectDir, String fileName, DiffModel diffModel) throws IOException {
+    public void addFileDiff(String projectDir, String fileName, DiffModel diffModel) throws IOException {
         String encodedName = encode(fileName);
         File file = new File(projectDir + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.DiffDir, encodedName);
         if (file.exists() && file.isFile()) {
@@ -261,7 +269,7 @@ public class DirNFileService {
             //Remove diffModel if same index exist
             DiffModel toRemove = null;
             for (DiffModel d : diffDB.getDiffModels()) {
-                if (d.getIndex().equals(diffModel.getIndex())) {
+                if (d.getID().equals(diffModel.getID())) {
                     toRemove = d;
                     break;
                 }
@@ -279,13 +287,21 @@ public class DirNFileService {
             }
         } else {
             var diffDB = new DiffDB();
-            diffModel.setIndex("0"); //Since this is the first time it is being created
             diffDB.getDiffModels().add(diffModel);
             file.createNewFile();
             try (FileWriter fileWriter = new FileWriter(file)) {
                 fileWriter.write(gson.toJson(diffDB));
             }
         }
+    }
+
+    public DiffModel getDiffModel(String projectDir, String fileName, String id) throws IOException {
+        var db = getDiffDBForFile(projectDir, fileName);
+        for (DiffModel dm : db.getDiffModels()) {
+            if (dm.getID().equals(id))
+                return dm;
+        }
+        return null;
     }
 
     public DiffDB getDiffDBForFile(String projectDir, String s) throws IOException {
@@ -302,22 +318,5 @@ public class DirNFileService {
         return (file.exists() && file.isFile());
     }
 
-    public void addNewSnapshot(String projectDir, SnapshotModel newSnap) throws IOException {
-        File path = new File(projectDir + "\\" + ConstantNames.KUFLEX, ConstantNames.SNAPSHOTDBFile);
-        var db = gson.fromJson(Files.readString(path.toPath()), SnapshotDB.class);
-        db.getSnapshotModels().add(newSnap);
-        try (FileWriter fileWriter = new FileWriter(path)) {
-            fileWriter.write(gson.toJson(db));
-        }
-    }
 
-    public void addNewCommit(String projectDir, CommitModel newCommit) throws Exception {
-        var commitDB = getCommitDbModelForBranch(projectDir, newCommit.getBranchID());
-        commitDB.commits.add(newCommit);
-        var file = getCommitDbFileForBranch(projectDir, newCommit.getBranchID());
-
-        try (FileWriter fileWriter = new FileWriter(file)) {
-            fileWriter.write(gson.toJson(commitDB));
-        }
-    }
 }
