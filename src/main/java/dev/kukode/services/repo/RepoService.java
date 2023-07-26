@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 26/07/23, 7:14 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 26/07/23, 7:23 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -170,6 +170,19 @@
 
         @Override
         public void loadCommit(String projectDir, String commitID, String branchID) throws Exception {
+            /*
+            Firstly, we need to load the commit model that we are trying to load.
+            Secondly, we need snapshots of the commit we are trying to load
+            Once we have the snapshots we know the files we are going to have to get
+
+            Iterate the files (f):
+            Find the linked list of the diff by starting from initial commit up to commit we want to load.
+            Load the file content and diff one by one until we end up with final content.
+
+            We simply delete the other files in project directory that we do not need.
+
+            The hard part will be figuring out how to effectively traverse the commits.
+             */
 
         }
 
