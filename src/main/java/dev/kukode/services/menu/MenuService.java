@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 18/07/23, 8:41 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 7:21 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -39,14 +39,14 @@ public class MenuService {
                     System.out.println("Type the name of the project");
                     String projectName = scanner.next();
                     Date createdDate = new Date();
-                    repoService.initializeRepo(path, projectName, createdDate, "Random Creator");
+                    repoService.initializeRepo(projectName, createdDate, "Random Creator");
                     break;
                 case 2:
                     System.out.println("Name of commit");
                     String commitName = scanner.next();
                     System.out.println("Comment");
                     String comment = scanner.next();
-                    repoService.createNewCommit(path, commitName, comment);
+                    repoService.createNewCommit(commitName, comment);
                 default:
                     break;
             }

@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 27/07/23, 7:03 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 7:21 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -45,17 +45,17 @@
 
 
         @Override
-        public void initializeRepo(String projectDir, String projectName, Date creationDate, String creator) throws Exception {
+        public void initializeRepo(String projectName, Date creationDate, String creator) throws Exception {
             // Create .KuFlex Directory
-            dirService.createKuFlexRepoDir(projectDir);
+            dirService.createKuFlexRepoDir();
             // Create Diff directory
-            dirService.createDiffDirectory(projectDir);
+            dirService.createDiffDirectory();
             // Create KuFlexRepo.json
-            dirService.createKuFlexRepoFile(projectDir, new KuflexRepoModel(projectName, creator, new Date()));
+            dirService.createKuFlexRepoFile(new KuflexRepoModel(projectName, creator, new Date()));
             // Create initial branch obj
             BranchModel initialBranchModel = new BranchModel("Initial Branch", new Date(), null, null);
             // Create initial branch directory
-            dirService.createBranchDirectory(projectDir, initialBranchModel.getUID());
+            dirService.createBranchDirectory(initialBranchModel.getUID());
             // Create branchDB obj and add initial branch to it
             var branchDB = new BranchDB();
             if (branchDB.branches == null) {
@@ -63,76 +63,76 @@
             }
             branchDB.branches.add(initialBranchModel);
             // Create branchDB file
-            dirService.createBranchDBFile(projectDir, branchDB);
+            dirService.createBranchDBFile(branchDB);
             // Create initial commitModel obj
             CommitModel initialCommitModel = new CommitModel("Initial Commit", "", new Date(), initialBranchModel.getUID(), null, null, new ArrayList<>());
             // Create commitDB and add initial commit
             var commitDb = new CommitDB();
             commitDb.commits.add(initialCommitModel);
             // Create commitDB for the branch
-            dirService.createCommitDBFileForBranch(projectDir, initialCommitModel.getBranchID(), commitDb);
+            dirService.createCommitDBFileForBranch(initialCommitModel.getBranchID(), commitDb);
             // Create snapshot obj for initial commit
             String snapShotID = initialBranchModel.getUID() + initialCommitModel.getUID();
-            List<String> filePaths = getProjectFileSnapshot(projectDir);
+            List<String> filePaths = getProjectFileSnapshot();
             SnapshotModel snapshotModel = new SnapshotModel(snapShotID, filePaths);
             // Create snapshotDB and add snapshot
             SnapshotDB snapshotDB = new SnapshotDB();
             snapshotDB.getSnapshotModels().add(snapshotModel);
             // Create snapshotDB file
-            dirService.createSnapshotDBFile(projectDir, snapshotDB);
+            dirService.createSnapshotDBFile(snapshotDB);
             // Iterate filePaths from snapshot of initial commit
             for (String filePath : filePaths) {
                 // Read the content from the project for each file
-                String diff = Files.readString(Path.of(projectDir + filePath));
+                String diff = Files.readString(Path.of(ConstantNames.ProjectPath + filePath));
                 // Create an initial Diff model for filePath
                 DiffModel initialDiff = new DiffModel(initialBranchModel.getUID() + initialCommitModel.getUID(), diff, initialCommitModel.getUID(), initialBranchModel.getUID());
                 // Create DiffDB for the filePath and adds initialDiff to it
-                dirService.addFileDiff(projectDir, filePath, initialDiff);
+                dirService.addFileDiff(filePath, initialDiff);
             }
             // Update Initial and Active commits and Branch in Repo
-            var repo = dirService.getKuFlexRepoModel(projectDir);
+            var repo = dirService.getKuFlexRepoModel();
             repo.setInitialCommit(initialCommitModel.getUID());
             repo.setActiveCommit(initialCommitModel.getUID());
             repo.setInitialBranch(initialBranchModel.getUID());
             repo.setActiveBranch(initialBranchModel.getUID());
-            dirService.updateKuFlexRepo(projectDir, repo);
+            dirService.updateKuFlexRepo(repo);
         }
 
         @Override
-        public void createNewCommit(String projectDir, String commitName, String comment) throws Exception {
+        public void createNewCommit(String commitName, String comment) throws Exception {
             // Get the repository
-            var repo = dirService.getKuFlexRepoModel(projectDir);
+            var repo = dirService.getKuFlexRepoModel();
             // Get the current commit
-            var currentCommit = dirService.getCommitByID(projectDir, repo.getActiveCommit(), repo.getActiveBranch());
+            var currentCommit = dirService.getCommitByID(repo.getActiveCommit(), repo.getActiveBranch());
             // Create a new commit
             var newCommit = new CommitModel(commitName, comment, new Date(), currentCommit.getBranchID(), currentCommit.getUID(), currentCommit.getBranchID(), new ArrayList<>());
             // Add the new commit
-            dirService.AddOrUpdateCommit(projectDir, newCommit);
+            dirService.AddOrUpdateCommit(newCommit);
             // Create a snapshot
-            List<String> filePaths = getProjectFileSnapshot(projectDir);
+            List<String> filePaths = getProjectFileSnapshot();
             var newSnap = new SnapshotModel(newCommit.getBranchID() + newCommit.getUID(), filePaths);
             // Add the snapshot
-            dirService.addNewSnapshot(projectDir, newSnap);
+            dirService.addNewSnapshot(newSnap);
             // Check if this is the first commit after the initial commit
             if (currentCommit.getBranchID().equals(repo.getInitialBranch()) && currentCommit.getUID().equals(repo.getInitialCommit())) {
                 // Iterate over the file paths of the snapshots
                 for (String filePath : filePaths) {
                     // Read the content of the project file for the current file path
-                    String currentContent = Files.readString(Path.of(projectDir + filePath));
+                    String currentContent = Files.readString(Path.of(ConstantNames.ProjectPath + filePath));
                     // Check if the file path has a diffDB
-                    if (dirService.doesDiffDBExist(projectDir, filePath)) {
-                        var currentDiffModel = dirService.getDiffModel(projectDir, filePath, currentCommit.getBranchID() + currentCommit.getUID());
+                    if (dirService.doesDiffDBExist(filePath)) {
+                        var currentDiffModel = dirService.getDiffModel(filePath, currentCommit.getBranchID() + currentCommit.getUID());
                         if (currentDiffModel == null) {
                             throw new Exception("Diff model for current commit is null");
                         }
                         String originalFileContent = currentDiffModel.getDiff();
                         String diffString = diffService.generateFileDiff(originalFileContent, currentContent);
                         var newDiffModel = new DiffModel(newCommit.getBranchID() + newCommit.getUID(), diffString, newCommit.getUID(), newCommit.getBranchID());
-                        dirService.addFileDiff(projectDir, filePath, newDiffModel);
+                        dirService.addFileDiff(filePath, newDiffModel);
                     } else {
                         // No previous diff exists, so create a new one
                         var newDiffModel = new DiffModel(newCommit.getBranchID() + newCommit.getUID(), currentContent, newCommit.getUID(), newCommit.getBranchID());
-                        dirService.addFileDiff(projectDir, filePath, newDiffModel);
+                        dirService.addFileDiff(filePath, newDiffModel);
                     }
                 }
             } else {
@@ -144,20 +144,20 @@
                 currentCommit.setChildrenBranchCommit(new ArrayList<>());
             }
             currentCommit.getChildrenBranchCommit().add(newCommit.getBranchID() + ".." + newCommit.getUID());
-            dirService.AddOrUpdateCommit(projectDir, currentCommit);
+            dirService.AddOrUpdateCommit(currentCommit);
             // Update the active branch and commit
             repo.setActiveBranch(newCommit.getBranchID());
             repo.setActiveCommit(newCommit.getUID());
-            dirService.updateKuFlexRepo(projectDir, repo);
+            dirService.updateKuFlexRepo(repo);
         }
 
         @Override
-        public boolean createNewBranch(String projectDir, String branchName, String branchComment, String inheritedBranch, String inheritedCommit) throws Exception {
+        public boolean createNewBranch(String branchName, String branchComment, String inheritedBranch, String inheritedCommit) throws Exception {
             return false;
         }
 
         @Override
-        public void loadCommit(String projectDir, String commitID, String branchID) throws Exception {
+        public void loadCommit(String commitID, String branchID) throws Exception {
             /*
             Firstly, we need to load the commit model that we are trying to load.
             Secondly, we need snapshots of the commit we are trying to load
@@ -172,10 +172,12 @@
             The hard part will be figuring out how to effectively traverse the commits.
              */
 
+            KuflexRepoModel repoModel = dirService.getKuFlexRepoModel();
+
         }
 
-        private List<String> getProjectFileSnapshot(String projectDir) {
-            List<String> filePaths = dirService.getProjectFilesPath(projectDir);
+        private List<String> getProjectFileSnapshot() {
+            List<String> filePaths = dirService.getProjectFilesPath(ConstantNames.ProjectPath);
             List<String> unwantedPaths = new ArrayList<>();
             filePaths.forEach(s -> {
                 if (s.contains("\\" + ConstantNames.KUFLEX)) {

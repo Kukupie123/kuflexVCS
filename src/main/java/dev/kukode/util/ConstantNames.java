@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 25/07/23, 9:57 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 7:21 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -15,6 +15,7 @@ public class ConstantNames {
     public static String CommitsDBFile = "commitsDb.json";
     public static String DiffDir = "diffs";
 
+    public static String ProjectPath = null;
     private ConstantNames() {
     }
 }
