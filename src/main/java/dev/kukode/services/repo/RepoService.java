@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 27/07/23, 7:21 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 7:28 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -85,7 +85,7 @@
                 // Read the content from the project for each file
                 String diff = Files.readString(Path.of(ConstantNames.ProjectPath + filePath));
                 // Create an initial Diff model for filePath
-                DiffModel initialDiff = new DiffModel(initialBranchModel.getUID() + initialCommitModel.getUID(), diff, initialCommitModel.getUID(), initialBranchModel.getUID());
+                DiffModel initialDiff = new DiffModel(diff, initialCommitModel.getUID(), initialBranchModel.getUID());
                 // Create DiffDB for the filePath and adds initialDiff to it
                 dirService.addFileDiff(filePath, initialDiff);
             }
@@ -127,11 +127,11 @@
                         }
                         String originalFileContent = currentDiffModel.getDiff();
                         String diffString = diffService.generateFileDiff(originalFileContent, currentContent);
-                        var newDiffModel = new DiffModel(newCommit.getBranchID() + newCommit.getUID(), diffString, newCommit.getUID(), newCommit.getBranchID());
+                        var newDiffModel = new DiffModel(diffString, newCommit.getUID(), newCommit.getBranchID());
                         dirService.addFileDiff(filePath, newDiffModel);
                     } else {
                         // No previous diff exists, so create a new one
-                        var newDiffModel = new DiffModel(newCommit.getBranchID() + newCommit.getUID(), currentContent, newCommit.getUID(), newCommit.getBranchID());
+                        var newDiffModel = new DiffModel(currentContent, newCommit.getUID(), newCommit.getBranchID());
                         dirService.addFileDiff(filePath, newDiffModel);
                     }
                 }
@@ -173,6 +173,10 @@
              */
 
             KuflexRepoModel repoModel = dirService.getKuFlexRepoModel();
+
+            //Is the commit we are trying to load initial Commit?
+            if (repoModel.getInitialBranch().equals(branchID) && repoModel.getInitialCommit().equals(commitID)) {
+            }
 
         }
 
