@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 27/07/23, 7:42 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 8:46 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -72,9 +72,8 @@
             // Create commitDB for the branch
             dirService.createCommitDBFileForBranch(initialCommitModel.getBranchID(), commitDb);
             // Create snapshot obj for initial commit
-            String snapShotID = initialBranchModel.getUID() + initialCommitModel.getUID();
             List<String> filePaths = getProjectFileSnapshot();
-            SnapshotModel snapshotModel = new SnapshotModel(snapShotID, filePaths);
+            SnapshotModel snapshotModel = new SnapshotModel(initialBranchModel.getUID(), initialCommitModel.getUID(), filePaths);
             // Create snapshotDB and add snapshot
             SnapshotDB snapshotDB = new SnapshotDB();
             snapshotDB.getSnapshotModels().add(snapshotModel);
@@ -110,7 +109,7 @@
             dirService.AddOrUpdateCommit(newCommit);
             // Create a snapshot
             List<String> filePaths = getProjectFileSnapshot();
-            var newSnap = new SnapshotModel(newCommit.getBranchID() + newCommit.getUID(), filePaths);
+            var newSnap = new SnapshotModel(newCommit.getBranchID(), newCommit.getUID(), filePaths);
             // Add the snapshot
             dirService.addNewSnapshot(newSnap);
             // Check if this is the first commit after the initial commit
@@ -180,7 +179,18 @@
 
                 for (String file : snap.getFiles()) {
                     //Load the file content
+                    DiffModel diffModel = dirService.getDiffModel(file, repoModel.getInitialBranch(), repoModel.getInitialCommit());
+                    dirService.writeContentToProjectFile(diffModel.getDiff(), file);
                 }
+
+                //Iterate over project files and remove those who are not part of snapshot
+                List<String> projectFilePaths = getProjectFileSnapshot();
+                for (String path : projectFilePaths) {
+                    if (!snap.getFiles().contains(path)) {
+                        dirService.removeProjectFile(path);
+                    }
+                }
+
             }
 
         }

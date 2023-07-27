@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 27/07/23, 7:21 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 8:46 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -7,6 +7,7 @@
 
 package dev.kukode.services.menu;
 
+import dev.kukode.services.dirNFile.DirNFileService;
 import dev.kukode.services.repo.RepoService;
 import org.springframework.stereotype.Service;
 
@@ -18,9 +19,11 @@ import java.util.Scanner;
 public class MenuService {
     final
     RepoService repoService;
+    final DirNFileService dirService;
 
-    public MenuService(RepoService repoService) {
+    public MenuService(RepoService repoService, DirNFileService dirService) {
         this.repoService = repoService;
+        this.dirService = dirService;
     }
 
     public void ShowMainOptions(String path) throws Exception {
@@ -32,7 +35,7 @@ public class MenuService {
         Scanner scanner = new Scanner(System.in);
         //noinspection InfiniteLoopStatement
         while (true) {
-            System.out.println("1. Initialize\n2. Commit");
+            System.out.println("1. Initialize\n2. Commit\n3. Load initial Commit");
             int choice = scanner.nextInt();
             switch (choice) {
                 case 1:
@@ -47,6 +50,10 @@ public class MenuService {
                     System.out.println("Comment");
                     String comment = scanner.next();
                     repoService.createNewCommit(commitName, comment);
+                    break;
+                case 3:
+                    var repo = dirService.getKuFlexRepoModel();
+                    repoService.loadCommit(repo.getInitialCommit(), repo.getInitialBranch());
                 default:
                     break;
             }

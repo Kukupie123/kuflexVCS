@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 27/07/23, 7:42 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 8:46 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -24,6 +24,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -36,7 +37,7 @@ public class DirNFileService {
         this.gson = gson;
     }
 
-    //GENERAL*************
+    //PROJECT*************
 
     /**
      * Returns a list of file path relative to the directory of the project
@@ -65,6 +66,23 @@ public class DirNFileService {
             }
         }
         return filePaths;
+    }
+
+    public String readProjectFileContent(String relativePath) throws IOException {
+        return Files.readString(Path.of(ConstantNames.ProjectPath + relativePath));
+    }
+
+    public void writeContentToProjectFile(String content, String filePath) throws IOException {
+        File file = new File(ConstantNames.ProjectPath + filePath);
+        try (FileWriter fileWriter = new FileWriter(file)) {
+            fileWriter.write(content);
+        }
+    }
+
+    public void removeProjectFile(String relativePath) {
+        File file = new File(ConstantNames.ProjectPath + relativePath);
+        if (!file.exists() || !file.isFile()) return;
+        file.delete();
     }
 
     public static String encode(String input) {
@@ -308,7 +326,9 @@ public class DirNFileService {
     public DiffModel getDiffModel(String fileName, String branchID, String commitID) throws IOException {
         var db = getDiffDBForFile(fileName);
         for (DiffModel dm : db.getDiffModels()) {
-            if (dm.getID().equals(ConstantNames.GET_UID_OF_DIFFMODEL(branchID, commitID))) return dm;
+            if (dm.getID().equals(ConstantNames.GET_UID_OF_DIFFMODEL(branchID, commitID))) {
+                return dm;
+            }
         }
         return null;
     }
