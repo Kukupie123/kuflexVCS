@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 27/07/23, 7:21 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 8:47 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -16,7 +16,6 @@ public interface IRepoService {
      * Initialize the repository with the respective folders and files.
      * Creates an initial Branch and Commit as well
      *
-     * @param projectDir   Root Directory of the project
      * @param projectName  Name of the project
      * @param creationDate Date of creation
      * @param creator      Name of Creator
@@ -34,7 +33,7 @@ public interface IRepoService {
     void createNewCommit(String commitName, String comment) throws Exception;
 
     /**
-     * Creates a new Branch from another Branch & Commit
+     * Creates a new Branch from another Branch & Commit. Also creates an initial Commit
      *
      * @param branchName      Name of the branch
      * @param branchComment   Comment for the branch
@@ -46,7 +45,6 @@ public interface IRepoService {
 
     /**
      * Loads a commit.
-     *
      * @param commitID ID of the commit
      * @param branchID BranchID of the commit
      */
