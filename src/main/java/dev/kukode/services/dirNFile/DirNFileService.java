@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 27/07/23, 7:21 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 7:42 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -249,6 +249,16 @@ public class DirNFileService {
         }
     }
 
+    public SnapshotModel getSnapshot(String branchID, String commitID) throws IOException {
+        File path = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.SNAPSHOTDBFile);
+        var db = gson.fromJson(Files.readString(path.toPath()), SnapshotDB.class);
+        for (var s : db.getSnapshotModels()) {
+            if (s.getId().equals(ConstantNames.GET_UID_OF_SNAPSHOT(branchID, commitID)))
+                return s;
+        }
+        return null;
+    }
+
 
     //DIFF
     public void createDiffDirectory() {
@@ -295,10 +305,10 @@ public class DirNFileService {
         }
     }
 
-    public DiffModel getDiffModel(String fileName, String id) throws IOException {
+    public DiffModel getDiffModel(String fileName, String branchID, String commitID) throws IOException {
         var db = getDiffDBForFile(fileName);
         for (DiffModel dm : db.getDiffModels()) {
-            if (dm.getID().equals(id)) return dm;
+            if (dm.getID().equals(ConstantNames.GET_UID_OF_DIFFMODEL(branchID, commitID))) return dm;
         }
         return null;
     }

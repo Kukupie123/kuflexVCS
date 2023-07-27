@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 27/07/23, 7:28 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 7:42 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -121,7 +121,7 @@
                     String currentContent = Files.readString(Path.of(ConstantNames.ProjectPath + filePath));
                     // Check if the file path has a diffDB
                     if (dirService.doesDiffDBExist(filePath)) {
-                        var currentDiffModel = dirService.getDiffModel(filePath, currentCommit.getBranchID() + currentCommit.getUID());
+                        var currentDiffModel = dirService.getDiffModel(filePath, currentCommit.getBranchID(), currentCommit.getUID());
                         if (currentDiffModel == null) {
                             throw new Exception("Diff model for current commit is null");
                         }
@@ -173,9 +173,14 @@
              */
 
             KuflexRepoModel repoModel = dirService.getKuFlexRepoModel();
+            SnapshotModel snap = dirService.getSnapshot(branchID, commitID);
 
             //Is the commit we are trying to load initial Commit?
             if (repoModel.getInitialBranch().equals(branchID) && repoModel.getInitialCommit().equals(commitID)) {
+
+                for (String file : snap.getFiles()) {
+                    //Load the file content
+                }
             }
 
         }
