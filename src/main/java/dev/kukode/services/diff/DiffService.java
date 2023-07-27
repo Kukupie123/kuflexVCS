@@ -1,45 +1,41 @@
 /*
- * Copyright (C) 26/07/23, 12:51 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 7:00 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
  */
-
 package dev.kukode.services.diff;
-
 
 import difflib.Delta;
 import difflib.DiffUtils;
 import difflib.Patch;
 import org.springframework.stereotype.Service;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class DiffService {
-    private static List<String> toUnifiedDiffFormat(List<Delta<String>> deltas, List<String> originalLines) {
+    // Convert the list of deltas to unified diff format
+    private static List<String> toUnifiedDiffFormat(List<Delta<String>> deltas) {
         List<String> unifiedDiffLines = new ArrayList<>();
-
         for (Delta<String> delta : deltas) {
+            // Get the original chunk information
             List<String> originalChunk = delta.getOriginal().getLines();
             int orgStart = delta.getOriginal().getPosition();
             int orgEnd = orgStart + originalChunk.size() - 1;
-
+            // Get the revised chunk information
             List<String> revisedChunk = delta.getRevised().getLines();
             int revStart = delta.getRevised().getPosition();
             int revEnd = revStart + revisedChunk.size() - 1;
-
+            // Add the chunk header to the unified diff lines
             unifiedDiffLines.add("@@ -" + (orgStart + 1) + "," + originalChunk.size() +
                     " +" + (revStart + 1) + "," + revisedChunk.size() + " @@");
-
+            // Add the original lines with a "-" prefix
             for (String line : originalChunk) {
                 unifiedDiffLines.add("-" + line);
             }
-
+            // Add the revised lines with a "+" prefix
             for (String line : revisedChunk) {
                 unifiedDiffLines.add("+" + line);
             }
@@ -47,22 +43,16 @@ public class DiffService {
         return unifiedDiffLines;
     }
 
-    private static void saveDiffToFile(List<String> diffLines, String filePath) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
-            for (String line : diffLines) {
-                writer.write(line);
-                writer.newLine();
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
+    // Generate the diff between the original and current content
     public String generateFileDiff(String original, String current) {
+        // Convert the current and original content to lists of lines
         List<String> currentContentToken = current.lines().toList();
         List<String> originalFileToken = original.lines().toList();
+        // Generate the diff patch
         Patch<String> patch = DiffUtils.diff(originalFileToken, currentContentToken);
-        List<String> diffLines = toUnifiedDiffFormat(patch.getDeltas(), originalFileToken);
+        // Convert the patch deltas to unified diff format
+        List<String> diffLines = toUnifiedDiffFormat(patch.getDeltas());
+        // Build the diff string
         StringBuilder diffString = new StringBuilder();
         for (String line : diffLines) {
             diffString.append(line);

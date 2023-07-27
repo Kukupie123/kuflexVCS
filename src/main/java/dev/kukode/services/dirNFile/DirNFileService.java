@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 26/07/23, 7:14 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 7:00 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -280,6 +280,7 @@ public class DirNFileService {
             }
 
             //Add new one
+            diffModel.setInitialDiff(false);
             diffDB.getDiffModels().add(diffModel);
 
             try (FileWriter fileWriter = new FileWriter(file)) {
@@ -287,6 +288,7 @@ public class DirNFileService {
             }
         } else {
             var diffDB = new DiffDB();
+            diffModel.setInitialDiff(true);
             diffDB.getDiffModels().add(diffModel);
             file.createNewFile();
             try (FileWriter fileWriter = new FileWriter(file)) {
