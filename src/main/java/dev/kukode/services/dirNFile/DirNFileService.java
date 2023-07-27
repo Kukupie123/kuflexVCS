@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 27/07/23, 8:46 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 9:18 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -60,7 +60,7 @@ public class DirNFileService {
                     String relativePath = basePath + File.separator + dirFile.getName();
                     filePaths.add(relativePath);
                 } else {
-                    List<String> subDirFiles = getProjectFilesPath(basePath + File.separator + dirFile.getName());
+                    List<String> subDirFiles = getProjectFilesPath(dirFile.getAbsolutePath(), basePath + File.separator + dirFile.getName());
                     filePaths.addAll(subDirFiles);
                 }
             }
@@ -74,6 +74,9 @@ public class DirNFileService {
 
     public void writeContentToProjectFile(String content, String filePath) throws IOException {
         File file = new File(ConstantNames.ProjectPath + filePath);
+        if (!file.exists()) {
+            file.createNewFile();
+        }
         try (FileWriter fileWriter = new FileWriter(file)) {
             fileWriter.write(content);
         }
@@ -333,10 +336,10 @@ public class DirNFileService {
         return null;
     }
 
-    public DiffDB getDiffDBForFile(String s) throws IOException {
-        String encodedName = encode(s);
+    public DiffDB getDiffDBForFile(String fileName) throws IOException {
+        String encodedName = encode(fileName);
         File file = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.DiffDir, encodedName);
-        if (!file.exists() && !file.isFile()) throw new NoSuchFileException("Diff file not found " + s);
+        if (!file.exists() && !file.isFile()) throw new NoSuchFileException("Diff file not found " + fileName);
 
         return gson.fromJson(Files.readString(file.toPath()), DiffDB.class);
     }

@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 27/07/23, 8:47 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 27/07/23, 9:18 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -190,7 +190,14 @@
                         dirService.removeProjectFile(path);
                     }
                 }
+
+
             }
+
+            //Update active branch and commit
+            repoModel.setActiveCommit(commitID);
+            repoModel.setActiveBranch(branchID);
+            dirService.updateKuFlexRepo(repoModel);
         }
 
         private List<String> getProjectFileSnapshot() {
