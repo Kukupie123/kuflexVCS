@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 28/07/23, 6:51 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 28/07/23, 9:55 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -134,8 +134,18 @@
                     }
                 }
             } else {
-                System.out.println("WIP");
-                // Work in progress
+                /*
+                Load the file content upto current diff.
+                Generate diff based on current content of project for the file
+                 */
+
+                for (String filePath : newSnap.getFiles()) {
+                    String fileContentForCurrentCommit = getFileContentForCommit(filePath, currentCommit);
+                    String currentContent = Files.readString(Path.of(ConstantNames.ProjectPath + filePath));
+                    String diffString = diffService.generateFileDiff(fileContentForCurrentCommit, currentContent);
+                    var newDiffModel = new DiffModel(diffString, newCommit.getUID(), newCommit.getBranchID());
+                    dirService.addFileDiff(filePath, newDiffModel);
+                }
             }
             // Update the children list of the current commit
             if (currentCommit.getChildrenBranchCommit() == null) {
@@ -185,58 +195,32 @@
                     dirService.writeContentToProjectFile(diffModel.getDiff(), file);
                 }
 
-                //Iterate over project files and remove those who are not part of snapshot
-                List<String> projectFilePaths = getProjectFileSnapshot();
-                for (String path : projectFilePaths) {
-                    if (!snap.getFiles().contains(path)) {
-                        dirService.removeProjectFile(path);
-                    }
-                }
-
 
             } else {
                 //Load linked list from current commit to initial commit
                 CommitModel commitToLoad = dirService.getCommitByID(commitID, branchID);
                 var commitChain = getCommitChainToInitial(commitToLoad, null);
-                for (CommitModel m :
-                        commitChain) {
+                for (CommitModel m : commitChain) {
                     System.out.println(m.getBranchID());
                 }
 
                 Collections.reverse(commitChain); //So that we start from initial commit to the commit we want to load.
 
-                //Get snapshot of the commit we want to load
-                SnapshotModel snapShotToLoad = dirService.getSnapshot(branchID, commitID);
-                for (String filePath : snapShotToLoad.getFiles()) {
-                    //Get the DiffDB for the file
-                    DiffDB fileDiffDB = dirService.getDiffDBForFile(filePath);
-                    //Get the initial diff
-                    DiffModel initialDiff = null;
-                    for (DiffModel dm : fileDiffDB.getDiffModels()) {
-                        if (dm.isInitialDiff()) {
-                            initialDiff = dm;
-                            break;
-                        }
-                    }
-                    if (initialDiff == null) throw new Exception("Failed to find initial diff of " + filePath);
+                for (String filePath : snap.getFiles()) {
+                    var content = getFileContentForCommit(filePath, commitToLoad);
+                    dirService.writeContentToProjectFile(content, filePath);
 
-                    //Remove all commits prior to initial diffs commit from the commitChain
-                    List<CommitModel> commitsToRemove = new ArrayList<>();
-                    for (CommitModel commitModel : commitChain) {
-                        if (initialDiff.getCommitID().equals(commitModel.getUID()) && initialDiff.getBranchID().equals(commitModel.getBranchID())) {
-                            break;
-                        } else {
-                            commitsToRemove.add(commitModel);
-                        }
-                    }
-                    commitChain.removeAll(commitsToRemove);
-
-                    //TODO Iterate commit chain
                 }
-
 
             }
 
+            //Iterate over project files and remove those who are not part of snapshot
+            List<String> projectFilePaths = getProjectFileSnapshot();
+            for (String path : projectFilePaths) {
+                if (!snap.getFiles().contains(path)) {
+                    dirService.removeProjectFile(path);
+                }
+            }
             //Update active branch and commit
             repoModel.setActiveCommit(commitID);
             repoModel.setActiveBranch(branchID);
@@ -269,5 +253,47 @@
             linkedList.add(prevCommit);
             linkedList.addAll(getCommitChainToInitial(prevCommit, linkedList));
             return linkedList;
+        }
+
+        private String getFileContentForCommit(String filePath, CommitModel commitToLoad) throws Exception {
+            var repoModel = dirService.getKuFlexRepoModel();
+            var commitChain = getCommitChainToInitial(commitToLoad, null);
+            //Get the DiffDB for the file
+            DiffDB fileDiffDB = dirService.getDiffDBForFile(filePath);
+            //Get the initial diff
+            DiffModel initialDiff = null;
+            for (DiffModel dm : fileDiffDB.getDiffModels()) {
+                if (dm.isInitialDiff()) {
+                    initialDiff = dm;
+                    break;
+                }
+            }
+            if (initialDiff == null) throw new Exception("Failed to find initial diff of " + filePath);
+
+            //Remove all commits prior to initial diffs commit from the commitChain
+            List<CommitModel> commitsToRemove = new ArrayList<>();
+            for (CommitModel commitModel : commitChain) {
+                if (initialDiff.getCommitID().equals(commitModel.getUID()) && initialDiff.getBranchID().equals(commitModel.getBranchID())) {
+                    break;
+                } else {
+                    commitsToRemove.add(commitModel);
+                }
+            }
+            commitChain.removeAll(commitsToRemove);
+
+            //Iterate commit chain
+            // and update the diff one by one starting from initial to the commit we want to load
+            String diffContent = "";
+            for (CommitModel cm : commitChain) {
+                var diffModel = dirService.getDiffModel(filePath, cm.getBranchID(), cm.getUID());
+                //If it's initial then just load the content
+                if (diffModel.getBranchID().equals(repoModel.getInitialBranch()) && diffModel.getCommitID().equals(repoModel.getInitialCommit())) {
+                    diffContent = diffModel.getDiff();
+                } else {
+                    diffContent = diffService.getOriginalContentFromDiff(diffModel.getDiff());
+                }
+            }
+
+            return diffContent;
         }
     }

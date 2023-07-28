@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 27/07/23, 7:00 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 28/07/23, 9:55 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -59,5 +59,16 @@ public class DiffService {
             diffString.append("\n");
         }
         return String.valueOf(diffString);
+    }
+
+    public String getOriginalContentFromDiff(String diffString) {
+        List<String> originalLines = new ArrayList<>();
+        String[] lines = diffString.split("\n");
+        for (String line : lines) {
+            if (line.startsWith("-")) {
+                originalLines.add(line.substring(1));
+            }
+        }
+        return String.join("\n", originalLines);
     }
 }
