@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 28/07/23, 5:17 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 28/07/23, 6:51 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -13,6 +13,7 @@
     import dev.kukode.models.branches.BranchModel;
     import dev.kukode.models.commits.CommitDB;
     import dev.kukode.models.commits.CommitModel;
+    import dev.kukode.models.diffs.DiffDB;
     import dev.kukode.models.diffs.DiffModel;
     import dev.kukode.models.snapshots.SnapshotDB;
     import dev.kukode.models.snapshots.SnapshotModel;
@@ -25,10 +26,7 @@
 
     import java.nio.file.Files;
     import java.nio.file.Path;
-    import java.util.ArrayList;
-    import java.util.Date;
-    import java.util.LinkedList;
-    import java.util.List;
+    import java.util.*;
 
     @Service
     public class RepoService implements IRepoService {
@@ -149,6 +147,9 @@
             repo.setActiveBranch(newCommit.getBranchID());
             repo.setActiveCommit(newCommit.getUID());
             dirService.updateKuFlexRepo(repo);
+
+            System.out.println("New commit ID :\n" + newCommit.getUID());
+            System.out.println("New branchID : \n" + newCommit.getBranchID());
         }
 
         @Override
@@ -196,11 +197,44 @@
             } else {
                 //Load linked list from current commit to initial commit
                 CommitModel commitToLoad = dirService.getCommitByID(commitID, branchID);
-                var modelChain = getCommitChainToInitial(commitToLoad, null);
+                var commitChain = getCommitChainToInitial(commitToLoad, null);
                 for (CommitModel m :
-                        modelChain) {
+                        commitChain) {
                     System.out.println(m.getBranchID());
                 }
+
+                Collections.reverse(commitChain); //So that we start from initial commit to the commit we want to load.
+
+                //Get snapshot of the commit we want to load
+                SnapshotModel snapShotToLoad = dirService.getSnapshot(branchID, commitID);
+                for (String filePath : snapShotToLoad.getFiles()) {
+                    //Get the DiffDB for the file
+                    DiffDB fileDiffDB = dirService.getDiffDBForFile(filePath);
+                    //Get the initial diff
+                    DiffModel initialDiff = null;
+                    for (DiffModel dm : fileDiffDB.getDiffModels()) {
+                        if (dm.isInitialDiff()) {
+                            initialDiff = dm;
+                            break;
+                        }
+                    }
+                    if (initialDiff == null) throw new Exception("Failed to find initial diff of " + filePath);
+
+                    //Remove all commits prior to initial diffs commit from the commitChain
+                    List<CommitModel> commitsToRemove = new ArrayList<>();
+                    for (CommitModel commitModel : commitChain) {
+                        if (initialDiff.getCommitID().equals(commitModel.getUID()) && initialDiff.getBranchID().equals(commitModel.getBranchID())) {
+                            break;
+                        } else {
+                            commitsToRemove.add(commitModel);
+                        }
+                    }
+                    commitChain.removeAll(commitsToRemove);
+
+                    //TODO Iterate commit chain
+                }
+
+
             }
 
             //Update active branch and commit

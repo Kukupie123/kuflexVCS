@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 27/07/23, 8:46 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 28/07/23, 6:51 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -54,6 +54,13 @@ public class MenuService {
                 case 3:
                     var repo = dirService.getKuFlexRepoModel();
                     repoService.loadCommit(repo.getInitialCommit(), repo.getInitialBranch());
+                    break;
+                case 4:
+                    System.out.println("Commit ID");
+                    String commitID = scanner.next();
+                    System.out.println("Branch ID");
+                    String branchID = scanner.next();
+                    repoService.loadCommit(commitID, branchID);
                 default:
                     break;
             }
