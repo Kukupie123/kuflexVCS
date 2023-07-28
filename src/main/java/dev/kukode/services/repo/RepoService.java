@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 28/07/23, 10:13 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 28/07/23, 11:47 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -13,7 +13,6 @@
     import dev.kukode.models.branches.BranchModel;
     import dev.kukode.models.commits.CommitDB;
     import dev.kukode.models.commits.CommitModel;
-    import dev.kukode.models.diffs.DiffDB;
     import dev.kukode.models.diffs.DiffModel;
     import dev.kukode.models.snapshots.SnapshotDB;
     import dev.kukode.models.snapshots.SnapshotModel;
@@ -124,7 +123,7 @@
                             throw new Exception("Diff model for current commit is null");
                         }
                         String originalFileContent = currentDiffModel.getDiff();
-                        String diffString = diffService.generateFileDiff(originalFileContent, currentContent);
+                        String diffString = diffService.generateDiffFile(originalFileContent, currentContent);
                         var newDiffModel = new DiffModel(diffString, newCommit.getUID(), newCommit.getBranchID());
                         dirService.addFileDiff(filePath, newDiffModel);
                     } else {
@@ -142,7 +141,7 @@
                 for (String filePath : newSnap.getFiles()) {
                     String fileContentForCurrentCommit = getFileContentForCommit(filePath, currentCommit);
                     String currentContent = Files.readString(Path.of(ConstantNames.ProjectPath + filePath));
-                    String diffString = diffService.generateFileDiff(fileContentForCurrentCommit, currentContent);
+                    String diffString = diffService.generateDiffFile(fileContentForCurrentCommit, currentContent);
                     var newDiffModel = new DiffModel(diffString, newCommit.getUID(), newCommit.getBranchID());
                     dirService.addFileDiff(filePath, newDiffModel);
                 }
@@ -158,8 +157,6 @@
             repo.setActiveCommit(newCommit.getUID());
             dirService.updateKuFlexRepo(repo);
 
-            System.out.println("New commit ID :\n" + newCommit.getUID());
-            System.out.println("New branchID : \n" + newCommit.getBranchID());
         }
 
         @Override
@@ -194,16 +191,10 @@
                     DiffModel diffModel = dirService.getDiffModel(file, repoModel.getInitialBranch(), repoModel.getInitialCommit());
                     dirService.writeContentToProjectFile(diffModel.getDiff(), file);
                 }
-
-
             } else {
                 //Load linked list from current commit to initial commit
                 CommitModel commitToLoad = dirService.getCommitByID(commitID, branchID);
                 var commitChain = getCommitChainToInitial(commitToLoad, null);
-                for (CommitModel m : commitChain) {
-                    System.out.println(m.getBranchID());
-                }
-
                 Collections.reverse(commitChain); //So that we start from initial commit to the commit we want to load.
 
                 for (String filePath : snap.getFiles()) {
@@ -213,7 +204,6 @@
                 }
 
             }
-
             //Iterate over project files and remove those who are not part of snapshot
             List<String> projectFilePaths = getProjectFileSnapshot();
             for (String path : projectFilePaths) {
@@ -240,7 +230,6 @@
         }
 
         private LinkedList<CommitModel> getCommitChainToInitial(CommitModel currentCommitModel, LinkedList<CommitModel> linkedList) throws Exception {
-            System.out.println(currentCommitModel.getUID());
             if (linkedList == null) {
                 linkedList = new LinkedList<>();
             }
@@ -256,47 +245,24 @@
         }
 
         private String getFileContentForCommit(String filePath, CommitModel commitToLoad) throws Exception {
-            var repoModel = dirService.getKuFlexRepoModel();
             var commitChain = getCommitChainToInitial(commitToLoad, null);
-            //Get the DiffDB for the file
-            DiffDB fileDiffDB = dirService.getDiffDBForFile(filePath);
-            //Get the initial diff
-            DiffModel initialDiff = null;
-            for (DiffModel dm : fileDiffDB.getDiffModels()) {
-                if (dm.isInitialDiff()) {
-                    initialDiff = dm;
-                    break;
-                }
-            }
-            if (initialDiff == null) throw new Exception("Failed to find initial diff of " + filePath);
-
-            //Remove all commits prior to initial diffs commit from the commitChain
-            List<CommitModel> commitsToRemove = new ArrayList<>();
-            for (CommitModel commitModel : commitChain) {
-                if (initialDiff.getCommitID().equals(commitModel.getUID()) && initialDiff.getBranchID().equals(commitModel.getBranchID())) {
-                    break;
-                } else {
-                    commitsToRemove.add(commitModel);
-                }
-            }
-            commitChain.removeAll(commitsToRemove);
-
+            Collections.reverse(commitChain);
             //Iterate the commit chain
-            // and update the diff one by one starting from initial to the commit we want to load
-            String diffContent = "";
+            //And update the diff one by one starting from initial to the commit we want to load
+            String currentContent = "";
             for (CommitModel cm : commitChain) {
                 var diffModel = dirService.getDiffModel(filePath, cm.getBranchID(), cm.getUID());
                 //Sometimes the commit may not contain the file
                 if (diffModel == null) continue;
                 //If it's initial, then just load the content
                 if (diffModel.isInitialDiff()) {
-                    diffContent = diffModel.getDiff();
+                    currentContent = diffModel.getDiff();
                 } else {
-                    diffContent = diffService.getOriginalContentFromDiff(diffModel.getDiff());
+                    String diffText = diffModel.getDiff();
+                    currentContent = diffService.getContentFromOriginalNDiff(currentContent, diffText);
                 }
-                System.out.println(diffContent);
             }
 
-            return diffContent;
+            return currentContent;
         }
     }

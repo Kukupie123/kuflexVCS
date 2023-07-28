@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 28/07/23, 6:51 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 28/07/23, 11:47 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -17,8 +17,7 @@ import java.util.Scanner;
 
 @Service
 public class MenuService {
-    final
-    RepoService repoService;
+    final RepoService repoService;
     final DirNFileService dirService;
 
     public MenuService(RepoService repoService, DirNFileService dirService) {
@@ -35,8 +34,9 @@ public class MenuService {
         Scanner scanner = new Scanner(System.in);
         //noinspection InfiniteLoopStatement
         while (true) {
-            System.out.println("1. Initialize\n2. Commit\n3. Load initial Commit");
+            System.out.println("1. Initialize\n2. Commit\n3. Load initial Commit \n4. Reload current commit");
             int choice = scanner.nextInt();
+            var repo = dirService.getKuFlexRepoModel();
             switch (choice) {
                 case 1:
                     System.out.println("Type the name of the project");
@@ -52,15 +52,10 @@ public class MenuService {
                     repoService.createNewCommit(commitName, comment);
                     break;
                 case 3:
-                    var repo = dirService.getKuFlexRepoModel();
                     repoService.loadCommit(repo.getInitialCommit(), repo.getInitialBranch());
                     break;
                 case 4:
-                    System.out.println("Commit ID");
-                    String commitID = scanner.next();
-                    System.out.println("Branch ID");
-                    String branchID = scanner.next();
-                    repoService.loadCommit(commitID, branchID);
+                    repoService.loadCommit(repo.getActiveCommit(), repo.getActiveBranch());
                 default:
                     break;
             }
