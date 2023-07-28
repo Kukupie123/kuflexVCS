@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 27/07/23, 9:18 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 28/07/23, 5:17 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -27,6 +27,7 @@
     import java.nio.file.Path;
     import java.util.ArrayList;
     import java.util.Date;
+    import java.util.LinkedList;
     import java.util.List;
 
     @Service
@@ -192,6 +193,14 @@
                 }
 
 
+            } else {
+                //Load linked list from current commit to initial commit
+                CommitModel commitToLoad = dirService.getCommitByID(commitID, branchID);
+                var modelChain = getCommitChainToInitial(commitToLoad, null);
+                for (CommitModel m :
+                        modelChain) {
+                    System.out.println(m.getBranchID());
+                }
             }
 
             //Update active branch and commit
@@ -210,5 +219,21 @@
             });
             filePaths.removeAll(unwantedPaths);
             return filePaths;
+        }
+
+        private LinkedList<CommitModel> getCommitChainToInitial(CommitModel currentCommitModel, LinkedList<CommitModel> linkedList) throws Exception {
+            if (linkedList == null) {
+                linkedList = new LinkedList<>();
+                linkedList.add(currentCommitModel);
+            }
+            var repo = dirService.getKuFlexRepoModel();
+            if (repo.getInitialCommit().equals(currentCommitModel.getUID()) && repo.getInitialBranch().equals(currentCommitModel.getBranchID())) {
+                linkedList.add(currentCommitModel);
+                return linkedList;
+            }
+            CommitModel prevCommit = dirService.getCommitByID(currentCommitModel.getInheritedCommit(), currentCommitModel.getInheritedBranch());
+            linkedList.add(prevCommit);
+            linkedList.addAll(getCommitChainToInitial(prevCommit, linkedList));
+            return linkedList;
         }
     }
