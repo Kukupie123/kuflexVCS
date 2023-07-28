@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 28/07/23, 9:55 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 28/07/23, 10:13 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -240,17 +240,17 @@
         }
 
         private LinkedList<CommitModel> getCommitChainToInitial(CommitModel currentCommitModel, LinkedList<CommitModel> linkedList) throws Exception {
+            System.out.println(currentCommitModel.getUID());
             if (linkedList == null) {
                 linkedList = new LinkedList<>();
-                linkedList.add(currentCommitModel);
             }
             var repo = dirService.getKuFlexRepoModel();
             if (repo.getInitialCommit().equals(currentCommitModel.getUID()) && repo.getInitialBranch().equals(currentCommitModel.getBranchID())) {
                 linkedList.add(currentCommitModel);
                 return linkedList;
             }
+            linkedList.add(currentCommitModel);
             CommitModel prevCommit = dirService.getCommitByID(currentCommitModel.getInheritedCommit(), currentCommitModel.getInheritedBranch());
-            linkedList.add(prevCommit);
             linkedList.addAll(getCommitChainToInitial(prevCommit, linkedList));
             return linkedList;
         }
@@ -281,17 +281,20 @@
             }
             commitChain.removeAll(commitsToRemove);
 
-            //Iterate commit chain
+            //Iterate the commit chain
             // and update the diff one by one starting from initial to the commit we want to load
             String diffContent = "";
             for (CommitModel cm : commitChain) {
                 var diffModel = dirService.getDiffModel(filePath, cm.getBranchID(), cm.getUID());
-                //If it's initial then just load the content
-                if (diffModel.getBranchID().equals(repoModel.getInitialBranch()) && diffModel.getCommitID().equals(repoModel.getInitialCommit())) {
+                //Sometimes the commit may not contain the file
+                if (diffModel == null) continue;
+                //If it's initial, then just load the content
+                if (diffModel.isInitialDiff()) {
                     diffContent = diffModel.getDiff();
                 } else {
                     diffContent = diffService.getOriginalContentFromDiff(diffModel.getDiff());
                 }
+                System.out.println(diffContent);
             }
 
             return diffContent;
