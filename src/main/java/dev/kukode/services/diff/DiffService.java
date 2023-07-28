@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 29/07/23, 12:56 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 29/07/23, 1:15 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -16,6 +16,8 @@ import java.util.List;
 @Service
 public class DiffService {
     private static Patch<String> parseUnifiedDiff(List<String> diffLines) {
+        //TODO
+        //So turns out the problem is the diff algorithms, we need to make our own file diff i guess
         List<AbstractDelta<String>> deltas = new ArrayList<>();
         List<String> originalChunk = new ArrayList<>();
         List<String> revisedChunk = new ArrayList<>();
