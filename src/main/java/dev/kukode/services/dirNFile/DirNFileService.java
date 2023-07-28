@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 27/07/23, 9:23 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 29/07/23, 12:56 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -333,7 +333,7 @@ public class DirNFileService {
     public DiffModel getDiffModel(String fileName, String branchID, String commitID) throws IOException {
         var db = getDiffDBForFile(fileName);
         for (DiffModel dm : db.getDiffModels()) {
-            if (dm.getID().equals(ConstantNames.GET_UID_OF_DIFFMODEL(branchID, commitID))) {
+            if (dm.getCommitID().equals(commitID) && dm.getBranchID().equals(branchID)) {
                 return dm;
             }
         }

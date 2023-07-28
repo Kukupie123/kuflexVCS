@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 28/07/23, 11:47 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 29/07/23, 12:56 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -123,7 +123,7 @@
                             throw new Exception("Diff model for current commit is null");
                         }
                         String originalFileContent = currentDiffModel.getDiff();
-                        String diffString = diffService.generateDiffFile(originalFileContent, currentContent);
+                        String diffString = diffService.generateDiffData(originalFileContent, currentContent);
                         var newDiffModel = new DiffModel(diffString, newCommit.getUID(), newCommit.getBranchID());
                         dirService.addFileDiff(filePath, newDiffModel);
                     } else {
@@ -141,7 +141,7 @@
                 for (String filePath : newSnap.getFiles()) {
                     String fileContentForCurrentCommit = getFileContentForCommit(filePath, currentCommit);
                     String currentContent = Files.readString(Path.of(ConstantNames.ProjectPath + filePath));
-                    String diffString = diffService.generateDiffFile(fileContentForCurrentCommit, currentContent);
+                    String diffString = diffService.generateDiffData(fileContentForCurrentCommit, currentContent);
                     var newDiffModel = new DiffModel(diffString, newCommit.getUID(), newCommit.getBranchID());
                     dirService.addFileDiff(filePath, newDiffModel);
                 }
@@ -165,7 +165,7 @@
         }
 
         @Override
-        public void loadCommit(String commitID, String branchID) throws Exception {
+        public void loadCommit(String commitIDtoLoad, String branchIDtoLoad) throws Exception {
             /*
             Firstly, we need to load the commit model that we are trying to load.
             Secondly, we need snapshots of the commit we are trying to load
@@ -181,29 +181,20 @@
              */
 
             KuflexRepoModel repoModel = dirService.getKuFlexRepoModel();
-            SnapshotModel snap = dirService.getSnapshot(branchID, commitID);
+            SnapshotModel snap = dirService.getSnapshot(branchIDtoLoad, commitIDtoLoad);
 
-            //Is the commit we are trying to load initial Commit?
-            if (repoModel.getInitialBranch().equals(branchID) && repoModel.getInitialCommit().equals(commitID)) {
+            //Load linked list from current commit to initial commit
+            CommitModel commitToLoad = dirService.getCommitByID(commitIDtoLoad, branchIDtoLoad);
+            var commitChain = getCommitChainToInitial(commitToLoad, null);
+            Collections.reverse(commitChain); //So that we start from initial commit to the commit, we want to load.
 
-                for (String file : snap.getFiles()) {
-                    //Load the file content
-                    DiffModel diffModel = dirService.getDiffModel(file, repoModel.getInitialBranch(), repoModel.getInitialCommit());
-                    dirService.writeContentToProjectFile(diffModel.getDiff(), file);
-                }
-            } else {
-                //Load linked list from current commit to initial commit
-                CommitModel commitToLoad = dirService.getCommitByID(commitID, branchID);
-                var commitChain = getCommitChainToInitial(commitToLoad, null);
-                Collections.reverse(commitChain); //So that we start from initial commit to the commit we want to load.
-
-                for (String filePath : snap.getFiles()) {
-                    var content = getFileContentForCommit(filePath, commitToLoad);
-                    dirService.writeContentToProjectFile(content, filePath);
-
-                }
+            for (String filePath : snap.getFiles()) {
+                var content = getFileContentForCommit(filePath, commitToLoad);
+                dirService.writeContentToProjectFile(content, filePath);
 
             }
+
+
             //Iterate over project files and remove those who are not part of snapshot
             List<String> projectFilePaths = getProjectFileSnapshot();
             for (String path : projectFilePaths) {
@@ -212,8 +203,8 @@
                 }
             }
             //Update active branch and commit
-            repoModel.setActiveCommit(commitID);
-            repoModel.setActiveBranch(branchID);
+            repoModel.setActiveCommit(commitIDtoLoad);
+            repoModel.setActiveBranch(branchIDtoLoad);
             dirService.updateKuFlexRepo(repoModel);
         }
 
@@ -233,13 +224,17 @@
             if (linkedList == null) {
                 linkedList = new LinkedList<>();
             }
+            if (!linkedList.contains(currentCommitModel)) {
+                linkedList.add(currentCommitModel);
+            }
             var repo = dirService.getKuFlexRepoModel();
             if (repo.getInitialCommit().equals(currentCommitModel.getUID()) && repo.getInitialBranch().equals(currentCommitModel.getBranchID())) {
-                linkedList.add(currentCommitModel);
                 return linkedList;
             }
-            linkedList.add(currentCommitModel);
             CommitModel prevCommit = dirService.getCommitByID(currentCommitModel.getInheritedCommit(), currentCommitModel.getInheritedBranch());
+            if (!linkedList.contains(prevCommit)) {
+                linkedList.add(prevCommit);
+            }
             linkedList.addAll(getCommitChainToInitial(prevCommit, linkedList));
             return linkedList;
         }
@@ -247,22 +242,25 @@
         private String getFileContentForCommit(String filePath, CommitModel commitToLoad) throws Exception {
             var commitChain = getCommitChainToInitial(commitToLoad, null);
             Collections.reverse(commitChain);
-            //Iterate the commit chain
-            //And update the diff one by one starting from initial to the commit we want to load
-            String currentContent = "";
-            for (CommitModel cm : commitChain) {
-                var diffModel = dirService.getDiffModel(filePath, cm.getBranchID(), cm.getUID());
-                //Sometimes the commit may not contain the file
-                if (diffModel == null) continue;
-                //If it's initial, then just load the content
+
+            String currentContent = null;
+
+            for (int i = 0; i < commitChain.size(); i++) {
+                CommitModel currentCommit = commitChain.get(i);
+                DiffModel diffModel = dirService.getDiffModel(filePath, currentCommit.getBranchID(), currentCommit.getUID());
+
                 if (diffModel.isInitialDiff()) {
+                    // Use the initial content stored during repository initialization
                     currentContent = diffModel.getDiff();
                 } else {
+                    // Apply the diff to the current content
                     String diffText = diffModel.getDiff();
+                    assert currentContent != null;
                     currentContent = diffService.getContentFromOriginalNDiff(currentContent, diffText);
                 }
             }
 
             return currentContent;
         }
+
     }
