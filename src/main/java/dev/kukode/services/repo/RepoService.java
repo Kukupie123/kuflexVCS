@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 29/07/23, 12:56 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 02/08/23, 6:59 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -134,16 +134,26 @@
                 }
             } else {
                 /*
-                Load the file content upto current diff.
-                Generate diff based on current content of project for the file
+                Load the file content up to current diff.
+                Generate diff based on the current content of a project for the file
                  */
 
                 for (String filePath : newSnap.getFiles()) {
-                    String fileContentForCurrentCommit = getFileContentForCommit(filePath, currentCommit);
                     String currentContent = Files.readString(Path.of(ConstantNames.ProjectPath + filePath));
-                    String diffString = diffService.generateDiffData(fileContentForCurrentCommit, currentContent);
-                    var newDiffModel = new DiffModel(diffString, newCommit.getUID(), newCommit.getBranchID());
-                    dirService.addFileDiff(filePath, newDiffModel);
+
+                    //If diffDB doesn't exist.
+                    // This file is a new file added in the snapshot and doesn't have a DiffDB yet,
+                    // So we need to create a diff model with its content as its diff
+                    if (!dirService.doesDiffDBExist(filePath)) {
+                        var newDiffModel = new DiffModel(currentContent, newCommit.getUID(), newCommit.getBranchID());
+                        dirService.addFileDiff(filePath, newDiffModel);
+                    } else {
+                        String fileContentForCurrentCommit = getFileContentForCommit(filePath, currentCommit);
+                        String diffString = diffService.generateDiffData(fileContentForCurrentCommit, currentContent);
+                        var newDiffModel = new DiffModel(diffString, newCommit.getUID(), newCommit.getBranchID());
+                        dirService.addFileDiff(filePath, newDiffModel);
+                    }
+
                 }
             }
             // Update the children list of the current commit
@@ -160,36 +170,34 @@
         }
 
         @Override
-        public boolean createNewBranch(String branchName, String branchComment, String inheritedBranch, String inheritedCommit) throws Exception {
+        public boolean createNewBranch(String branchName, String branchComment, String inheritedBranch, String inheritedCommit) {
             return false;
         }
 
         @Override
         public void loadCommit(String commitIDtoLoad, String branchIDtoLoad) throws Exception {
-            /*
-            Firstly, we need to load the commit model that we are trying to load.
-            Secondly, we need snapshots of the commit we are trying to load
-            Once we have the snapshots we know the files we are going to have to get
-
-            Iterate the files (f):
-            Find the linked list of the diff by starting from initial commit up to commit we want to load.
-            Load the file content and diff one by one until we end up with final content.
-
-            We simply delete the other files in project directory that we do not need.
-
-            The hard part will be figuring out how to effectively traverse the commits.
-             */
-
+            //Save the repoModel as we are going to be needing it for:
+            //Getting initial commit and branch
+            //Updating active branch and commit after loading the commit
             KuflexRepoModel repoModel = dirService.getKuFlexRepoModel();
+            //Get the snapshot of the Commit we want to load
+            //So that we know the project file we need to load diffs of and remove the rest of the file
             SnapshotModel snap = dirService.getSnapshot(branchIDtoLoad, commitIDtoLoad);
 
             //Load linked list from current commit to initial commit
+            //We do this
+            // because we need
+            // to load diffs of files in snapshot
+            // starting from their initial diff to the commit we need to load
             CommitModel commitToLoad = dirService.getCommitByID(commitIDtoLoad, branchIDtoLoad);
             var commitChain = getCommitChainToInitial(commitToLoad, null);
             Collections.reverse(commitChain); //So that we start from initial commit to the commit, we want to load.
 
+            //Iterate the filePaths in the snapshot
             for (String filePath : snap.getFiles()) {
+                //This function will return the content of the file up to the commit we pass
                 var content = getFileContentForCommit(filePath, commitToLoad);
+                //Write the content returned to the file
                 dirService.writeContentToProjectFile(content, filePath);
 
             }
@@ -240,21 +248,38 @@
         }
 
         private String getFileContentForCommit(String filePath, CommitModel commitToLoad) throws Exception {
+
+            //Get the commit chain
+            // because we need
+            // to load diffs of file from the initial diff of the file up to the commit we want to load
             var commitChain = getCommitChainToInitial(commitToLoad, null);
             Collections.reverse(commitChain);
 
+            //We will store the content we get after parsing the diff of the file here every iteration
             String currentContent = null;
 
-            for (int i = 0; i < commitChain.size(); i++) {
-                CommitModel currentCommit = commitChain.get(i);
-                DiffModel diffModel = dirService.getDiffModel(filePath, currentCommit.getBranchID(), currentCommit.getUID());
+            //Iterate through the commit chain starting from the initial commit up to the commit we want to load
+            for (CommitModel commit : commitChain) {
+                //Get the diff model for the filePath passed in parameter for commit
+                DiffModel diffModel = dirService.getDiffModel(filePath, commit.getBranchID(), commit.getUID());
+                //Some filePath may not exist in the commit
+                // and was created in the future commit, so we just continue the iteration
+                if (diffModel == null) continue;
 
+                //Determine if the diffModel is initial diffModel.
+                //A diffModel will have it as true if it was the first
                 if (diffModel.isInitialDiff()) {
-                    // Use the initial content stored during repository initialization
+                    // If it was the initial diff, then the "diff"
+                    // variable of DiffModel will have the content of the file
+                    // when it was first committed
+                    // as it's diff
                     currentContent = diffModel.getDiff();
                 } else {
                     // Apply the diff to the current content
+
                     String diffText = diffModel.getDiff();
+                    //currentContent can never be null because we always get a DiffModel with initialDiff = true
+                    //As we are iterating from the initial commit to the commit we want to load
                     assert currentContent != null;
                     currentContent = diffService.getContentFromOriginalNDiff(currentContent, diffText);
                 }

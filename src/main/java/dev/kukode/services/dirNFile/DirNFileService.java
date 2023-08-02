@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 29/07/23, 12:56 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 02/08/23, 6:59 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -343,7 +342,7 @@ public class DirNFileService {
     public DiffDB getDiffDBForFile(String fileName) throws IOException {
         String encodedName = encode(fileName);
         File file = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.DiffDir, encodedName);
-        if (!file.exists() && !file.isFile()) throw new NoSuchFileException("Diff file not found " + fileName);
+        if (!file.exists() && !file.isFile()) return null;
 
         return gson.fromJson(Files.readString(file.toPath()), DiffDB.class);
     }
