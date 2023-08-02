@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 02/08/23, 6:59 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 02/08/23, 10:09 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -43,7 +43,7 @@
 
 
         @Override
-        public void initializeRepo(String projectName, Date creationDate, String creator) throws Exception {
+        public KuflexRepoModel initializeRepo(String projectName, Date creationDate, String creator) throws Exception {
             // Create .KuFlex Directory
             dirService.createKuFlexRepoDir();
             // Create Diff directory
@@ -93,6 +93,7 @@
             repo.setInitialBranch(initialBranchModel.getUID());
             repo.setActiveBranch(initialBranchModel.getUID());
             dirService.updateKuFlexRepo(repo);
+            return repo;
         }
 
         @Override
@@ -166,6 +167,8 @@
             repo.setActiveBranch(newCommit.getBranchID());
             repo.setActiveCommit(newCommit.getUID());
             dirService.updateKuFlexRepo(repo);
+            System.out.println("New CommitID \n");
+            System.out.println(newCommit.getUID());
 
         }
 

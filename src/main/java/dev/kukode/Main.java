@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 27/07/23, 7:21 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 02/08/23, 10:09 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -28,3 +28,7 @@ public class Main {
         }
     }
 }
+
+
+//TODO: Fix bug where folders are not deleted when loading a commit where the folder did not exist
+//TODO: Spaces are left when loading data from diff

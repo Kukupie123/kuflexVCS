@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 26/07/23, 7:14 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 02/08/23, 10:09 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -23,7 +23,7 @@ public class CommitModel {
     Date creationDate; //Creation date
     String branchID; //The branch this commit is for
     String inheritedCommit; // The commit which this commit comes from
-    String inheritedBranch; // The branch this commit was inherited from.
+    String inheritedBranch; // The branchID the inherited commit belongs too
     // Will be null unless it's the first commit of the branch,
     // in which case the value will be the branchID of the branch the new branch was created from.
     List<String> childrenBranchCommit; //Children Commits will be stored here

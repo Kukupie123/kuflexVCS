@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 15/07/23, 7:15 pm KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 02/08/23, 10:09 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -17,9 +17,9 @@ public class BranchModel {
 
     Date creationDate; //Creation Date
 
-    String interhitedBranch;
+    String interhitedBranch; //The branchID the branch the inherited commit belongs to
 
-    String inheritedCommit;
+    String inheritedCommit; //The commitID of the commit this branch inherited from
 
     public BranchModel(String name, Date creationDate, String interhitedBranch, String inheritedCommit) {
         this.name = name;

@@ -1,11 +1,13 @@
 /*
- * Copyright (C) 27/07/23, 8:47 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 02/08/23, 10:09 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
  */
 
 package dev.kukode.services.repo;
+
+import dev.kukode.models.KuflexRepoModel;
 
 import java.util.Date;
 
@@ -19,9 +21,10 @@ public interface IRepoService {
      * @param projectName  Name of the project
      * @param creationDate Date of creation
      * @param creator      Name of Creator
+     * @return
      * @throws Exception File-Write exception
      */
-    void initializeRepo(String projectName, Date creationDate, String creator) throws Exception;
+    KuflexRepoModel initializeRepo(String projectName, Date creationDate, String creator) throws Exception;
 
     /**
      * Creates a new commit with the currently active branch and commit as it's parent

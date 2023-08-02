@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 29/07/23, 12:56 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 02/08/23, 10:09 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -34,7 +34,7 @@ public class MenuService {
         Scanner scanner = new Scanner(System.in);
         //noinspection InfiniteLoopStatement
         while (true) {
-            System.out.println("1. Initialize\n2. Commit\n3. Load initial Commit \n4. Reload current commit");
+            System.out.println("1. Initialize\n2. Commit\n3. Load initial Commit \n4. Reload current commit\n5. Load commit by ID.");
             int choice = scanner.nextInt();
             switch (choice) {
                 case 1:
@@ -57,6 +57,13 @@ public class MenuService {
                 case 4:
                     var repo1 = dirService.getKuFlexRepoModel();
                     repoService.loadCommit(repo1.getActiveCommit(), repo1.getActiveBranch());
+                    break;
+                case 5:
+                    var repo2 = dirService.getKuFlexRepoModel();
+                    System.out.println("Type commit ID to load");
+                    String commitID = scanner.next();
+                    repoService.loadCommit(commitID, repo2.getActiveBranch());
+                    break;
                 default:
                     break;
             }
