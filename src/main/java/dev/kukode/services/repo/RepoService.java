@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 03/08/23, 10:11 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 03/08/23, 10:41 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -12,7 +12,6 @@
     import dev.kukode.models.branches.BranchModel;
     import dev.kukode.models.commits.CommitModel;
     import dev.kukode.models.diffs.DiffModel;
-    import dev.kukode.models.snapshots.SnapshotDB;
     import dev.kukode.models.snapshots.SnapshotModel;
     import dev.kukode.services.diff.DiffService;
     import dev.kukode.services.dirNFile.DirNFileService;
@@ -39,7 +38,6 @@
             this.diffService = diffService;
         }
 
-
         @Override
         public KuflexRepoModel initializeRepo(String projectName, Date creationDate, String creator) throws Exception {
             // Create .KuFlex Directory
@@ -57,12 +55,8 @@
             // Create snapshot obj for initial commit
             List<String> filePaths = getProjectFileSnapshot();
             SnapshotModel snapshotModel = new SnapshotModel(initialBranchModel.getUID(), initialCommitModel.getUID(), filePaths);
-            // Create snapshotDB and add snapshot
-            SnapshotDB snapshotDB = new SnapshotDB();
-            snapshotDB.getSnapshotModels().add(snapshotModel);
-            // Create snapshotDB file
-            dirService.createSnapshotDBFile(snapshotDB);
-            // Iterate filePaths from snapshot of initial commit
+            dirService.addSnapshot(snapshotModel);
+            // Iterate filePaths from snapshot of initial commit for creating fileDiff
             for (String filePath : filePaths) {
                 // Read the content from the project for each file
                 String diff = Files.readString(Path.of(ConstantNames.ProjectPath + filePath));

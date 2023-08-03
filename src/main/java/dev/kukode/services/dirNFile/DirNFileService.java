@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 03/08/23, 10:11 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 03/08/23, 10:41 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -362,6 +362,22 @@ public class DirNFileService {
 
         try (FileWriter fileWriter = new FileWriter(commitDBFile)) {
             fileWriter.write(gson.toJson(commitDB));
+        }
+    }
+
+    //SNAPSHOT*******************
+    public void addSnapshot(SnapshotModel snapshotModel) throws IOException {
+        File snapshotDBFile = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX, ConstantNames.SNAPSHOTDBFile);
+        SnapshotDB snapshotDB;
+        if (!snapshotDBFile.exists()) {
+            snapshotDBFile.createNewFile();
+            snapshotDB = new SnapshotDB();
+        } else {
+            snapshotDB = gson.fromJson(Files.readString(snapshotDBFile.toPath()), SnapshotDB.class);
+        }
+        snapshotDB.getSnapshotModels().add(snapshotModel);
+        try (FileWriter fileWriter = new FileWriter(snapshotDBFile)) {
+            fileWriter.write(gson.toJson(snapshotDB));
         }
     }
 
