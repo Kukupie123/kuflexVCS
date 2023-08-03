@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 03/08/23, 10:41 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 03/08/23, 11:12 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -84,12 +84,12 @@
             // Create a new commit
             var newCommit = new CommitModel(commitName, comment, new Date(), currentCommit.getBranchID(), currentCommit.getUID(), currentCommit.getBranchID(), new ArrayList<>());
             // Add the new commit
-            dirService.AddOrUpdateCommit(newCommit);
+            dirService.addCommit(newCommit);
             // Create a snapshot
             List<String> filePaths = getProjectFileSnapshot();
             var newSnap = new SnapshotModel(newCommit.getBranchID(), newCommit.getUID(), filePaths);
             // Add the snapshot
-            dirService.addNewSnapshot(newSnap);
+            dirService.addSnapshot(newSnap);
             // Check if this is the first commit after the initial commit
             if (currentCommit.getBranchID().equals(repo.getInitialBranch()) && currentCommit.getUID().equals(repo.getInitialCommit())) {
                 // Iterate over the file paths of the snapshots

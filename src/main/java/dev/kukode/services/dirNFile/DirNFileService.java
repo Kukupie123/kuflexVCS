@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 03/08/23, 10:59 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 03/08/23, 11:12 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -91,12 +91,6 @@ public class DirNFileService {
         byte[] encodedBytes = Base64.getEncoder().encode(input.getBytes());
         return new String(encodedBytes);
     }
-
-    public static String decode(String encodedInput) {
-        byte[] decodedBytes = Base64.getDecoder().decode(encodedInput);
-        return new String(decodedBytes);
-    }
-
 
     //REPOSITORY***********************
 
@@ -217,23 +211,6 @@ public class DirNFileService {
 
 
     //SNAPSHOTS
-    public void createSnapshotDBFile(SnapshotDB initialSnapshotDB) throws IOException {
-        File path = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX, ConstantNames.SNAPSHOTDBFile);
-        path.createNewFile();
-
-        try (FileWriter fileWriter = new FileWriter(path)) {
-            fileWriter.write(gson.toJson(initialSnapshotDB));
-        }
-    }
-
-    public void addNewSnapshot(SnapshotModel newSnap) throws IOException {
-        File path = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX, ConstantNames.SNAPSHOTDBFile);
-        var db = gson.fromJson(Files.readString(path.toPath()), SnapshotDB.class);
-        db.getSnapshotModels().add(newSnap);
-        try (FileWriter fileWriter = new FileWriter(path)) {
-            fileWriter.write(gson.toJson(db));
-        }
-    }
 
     public SnapshotModel getSnapshot(String branchID, String commitID) throws IOException {
         File path = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.SNAPSHOTDBFile);
@@ -254,7 +231,7 @@ public class DirNFileService {
     public void addFileDiff(String fileName, DiffModel diffModel) throws IOException {
         String encodedName = encode(fileName);
         File file = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.DiffDir, encodedName);
-        if (file.exists() && file.isFile()) {
+        if (file.exists()) {
             var diffDB = gson.fromJson(Files.readString(file.toPath()), DiffDB.class);
             if (diffDB.getDiffModels() == null) {
                 diffDB.setDiffModels(new ArrayList<>());
