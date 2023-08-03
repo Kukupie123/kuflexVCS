@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 03/08/23, 10:41 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 03/08/23, 10:59 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -380,6 +380,5 @@ public class DirNFileService {
             fileWriter.write(gson.toJson(snapshotDB));
         }
     }
-
 
 }
