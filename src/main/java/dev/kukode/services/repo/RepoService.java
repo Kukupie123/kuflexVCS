@@ -1,5 +1,5 @@
     /*
- * Copyright (C) 02/08/23, 10:09 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 03/08/23, 10:11 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -9,9 +9,7 @@
 
     import com.google.gson.Gson;
     import dev.kukode.models.KuflexRepoModel;
-    import dev.kukode.models.branches.BranchDB;
     import dev.kukode.models.branches.BranchModel;
-    import dev.kukode.models.commits.CommitDB;
     import dev.kukode.models.commits.CommitModel;
     import dev.kukode.models.diffs.DiffModel;
     import dev.kukode.models.snapshots.SnapshotDB;
@@ -50,25 +48,12 @@
             dirService.createDiffDirectory();
             // Create KuFlexRepo.json
             dirService.createKuFlexRepoFile(new KuflexRepoModel(projectName, creator, new Date()));
-            // Create initial branch obj
+            // Create initial branch
             BranchModel initialBranchModel = new BranchModel("Initial Branch", new Date(), null, null);
-            // Create initial branch directory
-            dirService.createBranchDirectory(initialBranchModel.getUID());
-            // Create branchDB obj and add initial branch to it
-            var branchDB = new BranchDB();
-            if (branchDB.branches == null) {
-                branchDB.branches = new ArrayList<>();
-            }
-            branchDB.branches.add(initialBranchModel);
-            // Create branchDB file
-            dirService.createBranchDBFile(branchDB);
+            dirService.addBranch(initialBranchModel);
             // Create initial commitModel obj
             CommitModel initialCommitModel = new CommitModel("Initial Commit", "", new Date(), initialBranchModel.getUID(), null, null, new ArrayList<>());
-            // Create commitDB and add initial commit
-            var commitDb = new CommitDB();
-            commitDb.commits.add(initialCommitModel);
-            // Create commitDB for the branch
-            dirService.createCommitDBFileForBranch(initialCommitModel.getBranchID(), commitDb);
+            dirService.addCommit(initialCommitModel);
             // Create snapshot obj for initial commit
             List<String> filePaths = getProjectFileSnapshot();
             SnapshotModel snapshotModel = new SnapshotModel(initialBranchModel.getUID(), initialCommitModel.getUID(), filePaths);

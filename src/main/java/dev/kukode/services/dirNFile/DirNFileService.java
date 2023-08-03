@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 02/08/23, 6:59 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
+ * Copyright (C) 03/08/23, 10:11 am KUKODE - Kuchuk Boram Debbarma . - All Rights Reserved
  *
  * Unauthorized copying or redistribution of this file in source and binary forms via any medium
  * is strictly prohibited.
@@ -10,6 +10,7 @@ package dev.kukode.services.dirNFile;
 import com.google.gson.Gson;
 import dev.kukode.models.KuflexRepoModel;
 import dev.kukode.models.branches.BranchDB;
+import dev.kukode.models.branches.BranchModel;
 import dev.kukode.models.commits.CommitDB;
 import dev.kukode.models.commits.CommitModel;
 import dev.kukode.models.diffs.DiffDB;
@@ -23,7 +24,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -65,10 +65,6 @@ public class DirNFileService {
             }
         }
         return filePaths;
-    }
-
-    public String readProjectFileContent(String relativePath) throws IOException {
-        return Files.readString(Path.of(ConstantNames.ProjectPath + relativePath));
     }
 
     public void writeContentToProjectFile(String content, String filePath) throws IOException {
@@ -170,42 +166,8 @@ public class DirNFileService {
         }
     }
 
-    //BRANCH*****************
-
-    public void createBranchDirectory(String branchID) throws Exception {
-        File branchDir = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID);
-        if (!branchDir.mkdirs()) {
-            throw new Exception("Failed to create branch directory for branchID " + branchID);
-        }
-    }
-
-
-    public void createBranchDBFile(BranchDB initialBranch) throws Exception {
-        File branchDBFile = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.BranchesDBFILE);
-        if (branchDBFile.exists()) {
-            throw new Exception("BranchDBFile already exists");
-        }
-        if (!branchDBFile.createNewFile()) {
-            throw new Exception("Failed to create branchDBFile");
-        }
-
-        try (FileWriter fileWriter = new FileWriter(branchDBFile)) {
-            fileWriter.write(gson.toJson(initialBranch));
-        }
-    }
 
     //COMMITS
-    public void createCommitDBFileForBranch(String branchID, CommitDB initialCOmmitDB) throws Exception {
-        String filePath = ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\branches\\" + branchID + "\\" + ConstantNames.CommitsDBFile;
-        File commitDbFile = new File(filePath);
-        if (!commitDbFile.createNewFile()) {
-            throw new Exception("Failed to create commit DB File");
-        }
-
-        try (FileWriter fileWriter = new FileWriter(filePath)) {
-            fileWriter.write(gson.toJson(initialCOmmitDB));
-        }
-    }
 
 
     public CommitModel getCommitByID(String commitID, String branchID) throws Exception {
@@ -277,8 +239,7 @@ public class DirNFileService {
         File path = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.SNAPSHOTDBFile);
         var db = gson.fromJson(Files.readString(path.toPath()), SnapshotDB.class);
         for (var s : db.getSnapshotModels()) {
-            if (s.getId().equals(ConstantNames.GET_UID_OF_SNAPSHOT(branchID, commitID)))
-                return s;
+            if (s.getId().equals(ConstantNames.GET_UID_OF_SNAPSHOT(branchID, commitID))) return s;
         }
         return null;
     }
@@ -351,6 +312,57 @@ public class DirNFileService {
         String encodedName = encode(fileName);
         File file = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.DiffDir, encodedName);
         return (file.exists() && file.isFile());
+    }
+
+
+    //Branch*********************
+    public void addBranch(BranchModel branchModel) throws IOException {
+        //Create branch directory if it doesn't exist
+        File branchDir = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\branches");
+        if (!branchDir.exists()) {
+            branchDir.mkdirs();
+        }
+        //Create branchModel directory if it doesn't exist
+        File branchModelDir = new File(branchDir, branchModel.getUID());
+        if (!branchModelDir.exists()) {
+            branchModelDir.mkdirs();
+        }
+
+        //Add new branch Model to branchDB
+
+        BranchDB branchDB;
+
+        File branchDBFile = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\" + ConstantNames.BranchesDBFILE);
+        if (!branchDBFile.exists()) {
+            branchDBFile.createNewFile();
+            branchDB = new BranchDB();
+        } else {
+            branchDB = gson.fromJson(Files.readString(branchDBFile.toPath()), BranchDB.class);
+        }
+
+        branchDB.getBranches().add(branchModel);
+        try (FileWriter fileWriter = new FileWriter(branchDBFile)) {
+            fileWriter.write(gson.toJson(branchDB));
+        }
+    }
+
+    //Commit*****************
+    public void addCommit(CommitModel commitModel) throws IOException {
+        //Get/Create CommitDB File
+
+        File commitDBFile = new File(ConstantNames.ProjectPath + "\\" + ConstantNames.KUFLEX + "\\branches\\" + commitModel.getBranchID() + "\\" + ConstantNames.CommitsDBFile);
+        CommitDB commitDB;
+        if (!commitDBFile.exists()) {
+            commitDBFile.createNewFile();
+            commitDB = new CommitDB();
+        } else {
+            commitDB = gson.fromJson(Files.readString(commitDBFile.toPath()), CommitDB.class);
+        }
+        commitDB.commits.add(commitModel);
+
+        try (FileWriter fileWriter = new FileWriter(commitDBFile)) {
+            fileWriter.write(gson.toJson(commitDB));
+        }
     }
 
 
